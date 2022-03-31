@@ -37,7 +37,7 @@ via Go, we need to first invoke it via Python using concrete data types and expo
 as a protocol buffer graph. Once this graph is exported, Python is no longer required in the
 workflow.
 
-Python code to generate matrix inversion graph:
+Python code to generate matrix inversion [graph](https://www.tensorflow.org/guide/intro_to_graphs):
 ```python
 import tensorflow as tf
 
@@ -190,4 +190,45 @@ julia> y = inv(x)
  -4.35955    4.38344    4.86265   -9.04227    6.69298
 
 julia> 
+```
+
+## shipping binary
+Unlike pure Go binaries, the use of `libtensorflow.so` as a dynamic dependency
+puts restrictions on where the compiled binary can run. The final deployment
+package consists of `libtensorflow*.so` files, compiled Go binary and
+environment variable `LD_LIBRARY_PATH`. Full description can be found
+in the [Dockerfile](./examples/matrix-inverse/Dockerfile)
+
+Build it as follows:
+```bash
+cd example/matrix-inverse
+docker build -t tf-example ./
+```
+
+Run:
+```bash
+docker run --rm tf-example matrix-inverse
+input matrix: [[0.6046602879796196,0.9405090880450124,0.6645600532184904,0.4377141871869802,0.4246374970712657],[0.6868230728671094,0.06563701921747622,0.15651925473279124,0.09696951891448456,0.30091186058528707],[0.5152126285020654,0.8136399609900968,0.21426387258237492,0.380657189299686,0.31805817433032985],[0.4688898449024232,0.28303415118044517,0.29310185733681576,0.6790846759202163,0.21855305259276428],[0.20318687664732285,0.360871416856906,0.5706732760710226,0.8624914374478864,0.29311424455385804]]
+2022-03-31 20:41:00.923219: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+inverted matrix: [[1.326302317049744,-0.13382937179671123,-1.5241040918148205,3.4709920537115804,-2.7182882092548732],[0.5647043565175299,-1.211411206833943,0.9216998312774841,0.4173078118858744,-0.885745783269239],[2.9600099759890797,-0.5993164120459926,-3.4009914688680962,1.1673572264105623,-0.8529307712748238],[-1.0256616804088645,-0.5547649814313621,0.57114234242179,1.3082838291342402,0.4601750301751597],[-4.359552916330332,4.383444275003038,4.8626513930315705,-9.042268391824125,6.692982813192693]]
+```
+
+In case of issues you can inspect dependency chain as follows. Make sure all required
+files are reachable and there are no "not found" errors
+```bash
+docker run --rm -it tf-example bash
+root@c549661fd90f:/# ldd /tf/matrix-inverse 
+	linux-vdso.so.1 (0x00007ffeca553000)
+	libtensorflow.so.2 => /usr/local/lib/libtensorflow.so.2 (0x00007fde14ad4000)
+	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007fde14aaf000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fde148bd000)
+	libtensorflow_framework.so.2 => /usr/local/lib/libtensorflow_framework.so.2 (0x00007fde12b61000)
+	libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007fde12b5b000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007fde12a0c000)
+	librt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007fde12a00000)
+	libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007fde1281e000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fde12803000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fde235f6000)
+root@c549661fd90f:/# 
 ```
