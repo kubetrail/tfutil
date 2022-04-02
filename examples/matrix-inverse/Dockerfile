@@ -1,9 +1,10 @@
 FROM docker.io/library/golang:1.18 as builder
 
 WORKDIR /libtensorflow
-ADD https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.8.0.tar.gz ./
-RUN tar -zxf libtensorflow-cpu-linux-x86_64-2.8.0.tar.gz
-RUN tar -C /usr/local -xzf libtensorflow-cpu-linux-x86_64-2.8.0.tar.gz \
+RUN echo "looking for file libtensorflow-cpu-linux-$(go env GOHOSTARCH)-2.8.0.tar.gz"
+COPY libtensorflow-cpu-linux-*-2.8.0.tar.gz ./
+RUN tar -zxf libtensorflow-cpu-linux-$(go env GOHOSTARCH)-2.8.0.tar.gz
+RUN tar -C /usr/local -xzf libtensorflow-cpu-linux-$(go env GOHOSTARCH)-2.8.0.tar.gz \
     && ldconfig /usr/local/lib
 
 WORKDIR /workdir

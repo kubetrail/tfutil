@@ -232,3 +232,77 @@ root@c549661fd90f:/# ldd /tf/matrix-inverse
 	/lib64/ld-linux-x86-64.so.2 (0x00007fde235f6000)
 root@c549661fd90f:/# 
 ```
+
+## changes to upstream tensorflow code
+Following changes were made to generate protocol buffer Go files for upstream version `v2.8.0`:
+* A `go.mod` file was added
+* Assumptions on folders for writing new protobuf go files were changed in `generate.sh`. This
+allowed running `go generate` from the downloaded folder
+
+More details at the 
+[commit history](https://github.com/kubetrail-labs/tensorflow/commit/9a3cb0962c983435b9d103fe9f8e2ee9fe0cb000)
+
+## building libtensorflow
+`libtensorflow` is not available as a precompiled library from upstream. Below are unofficial steps
+to build it for `arm64`:
+
+First setup a Raspberry Pi 4 with 8GB memory 
+a [64-bit OS](https://downloads.raspberrypi.org/raspios_arm64/images)
+
+Setup 8GB swap
+```bash
+sudo swapoff -a
+sudo dd if=/dev/zero of=/swapfile bs=1G count=8
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
+Add following line to `/etc/fstab`:
+```
+/swapfile swap swap defaults 0 0
+```
+
+Download [bazel](https://github.com/bazelbuild/bazel/releases/download/4.2.1/bazel-4.2.1-linux-arm64)
+
+Install `GCC` and build tools:
+```bash
+sudo apt install build-essential
+```
+
+Install `java`:
+```bash
+sudo apt install default-jdk
+```
+
+Install `pip`:
+```bash
+sudo apt install python3-dev python3-venv python3-pip
+pip install -U --user pip numpy wheel packaging
+pip install -U --user keras_preprocessing --no-deps
+```
+
+Clone `tensorflow` at version `v2.8.0`:
+```bash
+git clone https://github.com/tensorflow/tensorflow.git
+cd tensorflow
+git checkout tags/v2.8.0
+```
+
+reboot now
+
+Configure tensorflow build
+```bash
+./configure # accept all default answers
+```
+
+Build tensorflow library and test... be patient, this can take several hours.
+```bash
+nohup bazel test --config opt //tensorflow/tools/lib_package:libtensorflow_test &
+```
+
+reboot now
+
+```bash
+nohup bazel build --config opt //tensorflow/tools/lib_package:libtensorflow &
+```

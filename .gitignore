@@ -17,3 +17,7 @@
 
 # Dependency directories (remove the comment below to include it)
 vendor/
+
+# libtensorflow
+libtensorflow-cpu-linux-amd64-2.8.0.tar.gz
+libtensorflow-cpu-linux-arm64-2.8.0.tar.gz
