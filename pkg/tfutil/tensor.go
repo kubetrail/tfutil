@@ -519,30 +519,3 @@ func (g *Tensor[T]) Clone() (*Tensor[T], error) {
 
 	return out, nil
 }
-
-// numElements is the total number of elements represented by
-// shape slice.
-// error is returned if shape value is negative or zero.
-func numElements(shape []int) (int, error) {
-	if len(shape) == 0 {
-		return 0, nil
-	}
-
-	n := shape[0]
-	if n <= 0 {
-		return -1, fmt.Errorf("please provide positive shape values")
-	}
-
-	if len(shape) == 1 {
-		return n, nil
-	}
-
-	for i := 1; i < len(shape); i++ {
-		if shape[i] <= 0 {
-			return -1, fmt.Errorf("please provide positive shape values")
-		}
-		n *= shape[i]
-	}
-
-	return n, nil
-}

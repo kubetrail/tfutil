@@ -43,20 +43,14 @@ func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
 		return nil, fmt.Errorf("failed to import graph: %w", err)
 	}
 
-	// prepare data feed specifying names of the operation.
-	// names x and dim come from python code, see def of reshape
-	// function taking inputs x and dim
 	feeds := map[tf.Output]*tf.Tensor{
 		X: x,
 	}
 
-	// prepare data outputs from tensorflow run.
-	// Identity is the final output point of the graph.
 	fetches := []tf.Output{
 		O,
 	}
 
-	// start new session
 	sess, err := tf.NewSession(
 		graph,
 		&tf.SessionOptions{},
@@ -66,7 +60,6 @@ func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
 	}
 	defer sess.Close()
 
-	// run session feeding feeds and fetching fetches
 	out, err := sess.Run(feeds, fetches, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run tf session: %w", err)
