@@ -192,6 +192,63 @@ julia> y = inv(x)
 julia> 
 ```
 
+### working with indices
+For instance, create a 3x4 byte matrix:
+```go
+    tensor, err := NewTensor([]byte, 3, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+```
+
+Populate it at specific indices assuming rows and columns
+```go
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 4; j++ {
+			if err := tensor.SetElement(byte(rand.Intn(math.MaxUint8)), i, j); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+```
+
+Similarly get elements from specific indices using:
+```go
+tensor.SetElement(i, j)
+```
+
+And obtain a `[][]byte` multi-dimensional slice using:
+```go
+tensor.GetMultiDimSlice().([][]byte)
+```
+
+### serialization
+```go
+    ni, nj := 2, 3
+	expected := make([]float64, ni*nj)
+	for i := range expected {
+		expected[i] = rand.Float64()
+	}
+
+	tensor, err := NewTensor(expected, ni, nj)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(tensor)
+	// produces:
+	// [[0.6046602879796196,0.9405090880450124,0.6645600532184904],[0.4377141871869802,0.4246374970712657,0.6868230728671094]]
+
+	jb, err := json.Marshal(tensor)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(jb))
+	// produces:
+	// {"type":"tensor","tfDataType":"Double","goDataType":"[][]float64","shape":[2,3],"value":[0.6046602879796196,0.9405090880450124,0.6645600532184904,0.4377141871869802,0.4246374970712657,0.6868230728671094]}
+```
+
 ## shipping binary
 Unlike pure Go binaries, the use of `libtensorflow.so` as a dynamic dependency
 puts restrictions on where the compiled binary can run. The final deployment

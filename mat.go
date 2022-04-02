@@ -184,39 +184,25 @@ func (g *Tensor[T]) NumElements() int {
 	return len(g.value)
 }
 
+func (g *Tensor[T]) SetElement(value T, indices ...int) error {
+	index, err := g.indicesToIndex(indices)
+	if err != nil {
+		return err
+	}
+
+	g.value[index] = value
+	return nil
+}
+
 // GetElement retrieves an element indexed by indices. This is
 // a slow method, for faster access it is recommended to obtain
 // a multidimensional slice and index off of that.
 func (g *Tensor[T]) GetElement(indices ...int) (T, error) {
 	zt := *new(T)
 
-	if len(indices) != len(g.shape) {
-		return zt, fmt.Errorf(
-			"invalid number of indices, expected %d, got %d", len(g.shape), len(indices),
-		)
-	}
-
-	shape := g.shape
-
-	// weights apply to each index. lower the index,
-	// higher is its weight, in the sense of how many
-	// elements it encapsulates in the tensor
-	weights := make([]int, len(shape))
-	for i := len(weights) - 1; i >= 0; i-- {
-		weights[i] = 1
-		if i < len(weights)-1 {
-			weights[i] = shape[i+1] * weights[i+1]
-		}
-	}
-
-	index := 0
-	for i, v := range indices {
-		if v >= shape[i] {
-			return zt, fmt.Errorf(
-				"index %d is %d and needs to be less than %d", i, v, shape[i],
-			)
-		}
-		index += v * weights[i]
+	index, err := g.indicesToIndex(indices)
+	if err != nil {
+		return zt, err
 	}
 
 	return g.value[index], nil
@@ -455,6 +441,42 @@ func (g *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
 
 		return nil
 	}
+}
+
+// indicesToIndex converts the dimensional indices (or subscripts)
+// to a positional index in the slice... all tensors are represented
+// as []T, so a positional index is simply an index on that slice
+func (g *Tensor[T]) indicesToIndex(indices []int) (int, error) {
+	if len(indices) != len(g.shape) {
+		return 0, fmt.Errorf(
+			"invalid number of indices, expected %d, got %d", len(g.shape), len(indices),
+		)
+	}
+
+	shape := g.shape
+
+	// weights apply to each index. lower the index,
+	// higher is its weight, in the sense of how many
+	// elements it encapsulates in the tensor
+	weights := make([]int, len(shape))
+	for i := len(weights) - 1; i >= 0; i-- {
+		weights[i] = 1
+		if i < len(weights)-1 {
+			weights[i] = shape[i+1] * weights[i+1]
+		}
+	}
+
+	index := 0
+	for i, v := range indices {
+		if v >= shape[i] {
+			return 0, fmt.Errorf(
+				"index %d is %d and needs to be less than %d", i, v, shape[i],
+			)
+		}
+		index += v * weights[i]
+	}
+
+	return index, nil
 }
 
 // Marshal produces an instance of upstream tensor based on scalar value
