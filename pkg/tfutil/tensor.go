@@ -49,12 +49,12 @@ var dataTypeMap = map[tf.DataType]string{
 
 // PrimitiveTypes are type constraints for supported underlying types
 type PrimitiveTypes interface {
-	~bool |
-		~int8 | ~int16 | ~int32 | ~int64 |
-		~uint8 | ~uint16 | ~uint32 | ~uint64 |
-		~float32 | ~float64 |
-		~complex64 | ~complex128 |
-		~string
+	bool |
+		int8 | int16 | int32 | int64 |
+		uint8 | uint16 | uint32 | uint64 |
+		float32 | float64 |
+		complex64 | complex128 |
+		string
 }
 
 // Scalar represents a singular value type parametrized by supported types
@@ -140,8 +140,7 @@ func NewTensor[T PrimitiveTypes](value []T, shape ...int) (*Tensor[T], error) {
 // transformation to numpy version
 func (g *Tensor[T]) String() string {
 	m, _ := g.GetMultiDimSlice()
-	jb, _ := json.Marshal(m)
-	return string(jb)
+	return fmt.Sprint(m)
 }
 
 // MarshalJSON serializes tensor with additional metadata such
@@ -498,6 +497,27 @@ func (g *Scalar[T]) Unmarshal(tfTensor *tf.Tensor) error {
 
 	g.value = value
 	return nil
+}
+
+// Clone creates a clone of receiver tensor
+func (g *Tensor[T]) Clone() (*Tensor[T], error) {
+	value := make([]T, len(g.value))
+	shape := make([]int, len(g.shape))
+
+	for i, v := range g.value {
+		value[i] = v
+	}
+
+	for i, v := range g.shape {
+		shape[i] = v
+	}
+
+	out, err := NewTensor(value, shape...)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
 }
 
 // numElements is the total number of elements represented by

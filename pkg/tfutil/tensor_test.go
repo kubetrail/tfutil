@@ -368,3 +368,138 @@ func TestScalar_String(t *testing.T) {
 
 	fmt.Println(string(jb))
 }
+
+func TestTensor_Scale(t *testing.T) {
+	x, err := NewTensor([]int32{1, 2, 3, 4}, 2, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := x.Scale(int32(2)); err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(x)
+}
+
+func TestTensor_ScaleStrings(t *testing.T) {
+	x, err := NewTensor([]string{"abcd", "1234", "0", "x"}, 2, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := x.Scale("zzz"); err == nil {
+		t.Fatal("expected to fail for strings")
+	}
+}
+
+func TestTensor_ScaleBool(t *testing.T) {
+	x, err := NewTensor([]bool{true, true, false, true}, 2, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := x.Scale(false); err == nil {
+		t.Fatal("expected to fail for bool")
+	}
+}
+
+func TestTensor_ScaleComplex128(t *testing.T) {
+	x, err := NewTensor(
+		[]complex128{
+			complex(float64(2), float64(3)),
+			complex(float64(4), float64(5)),
+			complex(float64(6), float64(7)),
+			complex(float64(8), float64(9)),
+		}, 2, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(x)
+
+	if err := x.Scale(complex(float64(1.2), float64(2.3))); err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(x)
+}
+
+func TestTensor_Reshape(t *testing.T) {
+	m, err := NewTensor([]int32{1, 2, 3, 4, 5, 6}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.Reshape(3, 2); err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(m)
+}
+
+func TestTensor_ReshapeString(t *testing.T) {
+	m, err := NewTensor([]string{"abcd", "1234", "c", "d0", "ee", "ffff"}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.Reshape(3, 2); err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(m)
+}
+
+func TestTensor_ReshapeBool(t *testing.T) {
+	m, err := NewTensor([]bool{true, true, false, true, false, false}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.Reshape(3, 2); err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(m)
+}
+
+func TestTensor_Inv(t *testing.T) {
+	m, err := NewTensor(make([]float64, 25), 5, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range m.value {
+		m.value[i] = rand.Float64()
+	}
+
+	fmt.Println(m)
+
+	output, err := MatrixInverse(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(output)
+}
+
+func TestMatrixInverse(t *testing.T) {
+	m, err := NewTensor(make([]float32, 25), 5, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range m.value {
+		m.value[i] = rand.Float32()
+	}
+
+	fmt.Println(m)
+
+	output, err := MatrixInverse(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(output)
+}
