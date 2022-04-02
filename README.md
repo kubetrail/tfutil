@@ -64,6 +64,7 @@ replace github.com/tensorflow/tensorflow/tensorflow/go => github.com/kubetrail-l
 ```
 
 Write `Go` code:
+
 ```go
 package main
 
@@ -77,7 +78,7 @@ import (
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 )
 
-//go:embed models/graph.pb
+//go:embed pkg/tfutil/models/graph.pb
 var def []byte
 
 func main() {
@@ -254,7 +255,7 @@ Unlike pure Go binaries, the use of `libtensorflow.so` as a dynamic dependency
 puts restrictions on where the compiled binary can run. The final deployment
 package consists of `libtensorflow*.so` files, compiled Go binary and
 environment variable `LD_LIBRARY_PATH`. Full description can be found
-in the [Dockerfile](./examples/matrix-inverse/Dockerfile)
+in the [Dockerfile](cmd/matrix-inverse/Dockerfile)
 
 Build it as follows:
 ```bash
