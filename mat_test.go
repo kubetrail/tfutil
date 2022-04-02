@@ -282,6 +282,58 @@ func TestTensor_GetElement3(t *testing.T) {
 	}
 }
 
+func TestTensor_SetElement(t *testing.T) {
+	ni, nj, nk, nl := 2, 3, 4, 5
+	expected := make([]float64, ni*nj*nk*nl)
+
+	tensor, err := NewTensor(expected, ni, nj, nk, nl)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 3; j++ {
+			for k := 0; k < 4; k++ {
+				for l := 0; l < 5; l++ {
+					if err := tensor.SetElement(rand.Float64(), i, j, k, l); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+		}
+	}
+
+	tfTensor, err := tensor.Marshal()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedTensor, ok := tfTensor.Value().([][][][]float64)
+	if !ok {
+		t.Fatal("invalid type assertion")
+	}
+
+	count := 0
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 3; j++ {
+			for k := 0; k < 4; k++ {
+				for l := 0; l < 5; l++ {
+					e, err := tensor.GetElement(i, j, k, l)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					if e != expectedTensor[i][j][k][l] {
+						t.Fatal("expected", expected[count], ", got", e, ", at indices", []int{i, j, k, l})
+					}
+
+					count++
+				}
+			}
+		}
+	}
+}
+
 func TestTensor_String(t *testing.T) {
 	ni, nj := 2, 3
 	expected := make([]float64, ni*nj)
