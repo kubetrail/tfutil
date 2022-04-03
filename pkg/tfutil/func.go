@@ -8,13 +8,9 @@ import (
 	"github.com/tensorflow/tensorflow/tensorflow/go/op"
 )
 
-// MatrixInverse inverts the tensor assuming it is a square matrix
+// MatrixInverse inverts the tensor assuming it is a square matrix,
+// otherwise it will throw error
 func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
-	switch any(*new(T)).(type) {
-	case bool, string:
-		return nil, fmt.Errorf("matrix inverse operation not supported for bool or string types")
-	}
-
 	x, err := input.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tf tensor: %w", err)
@@ -31,7 +27,7 @@ func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
 
 	// operation to invert matrix.
 	// needs a square matrix
-	O := tfutilop.MatrixInverse(root, X)
+	Output := tfutilop.MatrixInverse(root, X)
 
 	graph, err := root.Finalize()
 	if err != nil {
@@ -43,7 +39,7 @@ func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
 	}
 
 	fetches := []tf.Output{
-		O,
+		Output,
 	}
 
 	sess, err := tf.NewSession(
@@ -53,7 +49,12 @@ func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new tf session: %w", err)
 	}
-	defer sess.Close()
+	defer func(sess *tf.Session) {
+		err := sess.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(sess)
 
 	out, err := sess.Run(feeds, fetches, nil)
 	if err != nil {
@@ -121,7 +122,7 @@ func Transpose[T PrimitiveTypes](input *Tensor[T], perm ...int) (*Tensor[T], err
 	)
 
 	// operation to transpose a tensor.
-	O := op.Transpose(root, X, Y)
+	Output := op.Transpose(root, X, Y)
 
 	graph, err := root.Finalize()
 	if err != nil {
@@ -134,7 +135,7 @@ func Transpose[T PrimitiveTypes](input *Tensor[T], perm ...int) (*Tensor[T], err
 	}
 
 	fetches := []tf.Output{
-		O,
+		Output,
 	}
 
 	sess, err := tf.NewSession(
@@ -144,7 +145,12 @@ func Transpose[T PrimitiveTypes](input *Tensor[T], perm ...int) (*Tensor[T], err
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new tf session: %w", err)
 	}
-	defer sess.Close()
+	defer func(sess *tf.Session) {
+		err := sess.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(sess)
 
 	out, err := sess.Run(feeds, fetches, nil)
 	if err != nil {
