@@ -11,7 +11,6 @@ WORKDIR /workdir
 COPY go.mod ./
 COPY go.sum ./
 COPY main.go ./
-COPY models ./models
 
 RUN go mod tidy
 RUN go build -o matrix-inverse ./

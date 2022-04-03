@@ -14,7 +14,7 @@ func (g *Tensor[T]) Reshape(shape ...int) error {
 		return fmt.Errorf("failed to get tf tensor: %w", err)
 	}
 
-	y, err := tf.NewTensor(shapeToint64Shape(shape))
+	y, err := tf.NewTensor(castToInt64(shape))
 	if err != nil {
 		return fmt.Errorf("failed to get tf tensor: %w", err)
 	}
@@ -24,7 +24,7 @@ func (g *Tensor[T]) Reshape(shape ...int) error {
 		root.SubScope("X"),
 		x.DataType(),
 		op.PlaceholderShape(
-			tf.MakeShape(shapeToint64Shape(g.shape)...),
+			tf.MakeShape(castToInt64(g.shape)...),
 		),
 	)
 	Y := op.Placeholder(

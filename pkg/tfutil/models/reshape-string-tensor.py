@@ -1,3 +1,4 @@
+# https://www.tensorflow.org/guide/intro_to_graphs
 import tensorflow as tf
 
 

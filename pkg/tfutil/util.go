@@ -1,11 +1,17 @@
 package tfutil
 
-import "fmt"
+import (
+	"fmt"
 
-func shapeToint64Shape(shape []int) []int64 {
+	"golang.org/x/exp/constraints"
+)
+
+// castToInt64 is a generic function that can cast input
+// slice of integers to a slice of int64
+func castToInt64[T constraints.Integer](shape []T) []int64 {
 	newShape := make([]int64, len(shape))
-	for i := range shape {
-		newShape[i] = int64(shape[i])
+	for i, v := range shape {
+		newShape[i] = int64(v)
 	}
 
 	return newShape
