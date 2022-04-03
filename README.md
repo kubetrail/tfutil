@@ -139,29 +139,59 @@ tensor.GetMultiDimSlice().([][]byte)
 
 ### serialization
 ```go
-    ni, nj := 2, 3
-	expected := make([]float64, ni*nj)
-	for i := range expected {
-		expected[i] = rand.Float64()
-	}
-
-	tensor, err := NewTensor(expected, ni, nj)
+    input, err := NewTensor([]byte{1, 2, 3, 4, 5, 6}, 2, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fmt.Println(tensor)
-	// produces:
-	// [[0.6046602879796196,0.9405090880450124,0.6645600532184904],[0.4377141871869802,0.4246374970712657,0.6868230728671094]]
+	jb, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	jb, err := json.Marshal(tensor)
+	output := &Tensor[byte]{}
+	if err := json.Unmarshal(jb, output); err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(input)
+	fmt.Println(string(jb))
+```
+This results in human readable string output of `[[1 2 3] [4 5 6]]` and JSON serialization as follows:
+```json
+{"type":"tensor","tfDataType":"Uint8","goDataType":"uint8","shape":[2,3],"value":"AQIDBAUG"}
+```
+
+The serialized form can be parsed back into a tensor parametrized by the corresponding data type.
+
+### serialization of complex data
+`complex64` and `complex128` data types are not supported natively by JSON serialization.
+These values, therefore, are separated out into real and imaginary parts as follows
+```go
+    input, err := NewTensor(
+		[]complex128{
+			complex(float64(1.2), float64(1.3)),
+			complex(float64(1.3), float64(1.4)),
+			complex(float64(1.4), float64(1.5)),
+			complex(float64(1.5), float64(1.6)),
+			complex(float64(1.6), float64(1.7)),
+			complex(float64(1.7), float64(1.8)),
+		}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	jb, err := json.Marshal(input)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	fmt.Println(string(jb))
-	// produces:
-	// {"type":"tensor","tfDataType":"Double","goDataType":"[][]float64","shape":[2,3],"value":[0.6046602879796196,0.9405090880450124,0.6645600532184904,0.4377141871869802,0.4246374970712657,0.6868230728671094]}
+```
+
+The JSON serialization looks as follows:
+```json
+{"type":"tensor","tfDataType":"Complex128","goDataType":"complex128","shape":[2,3],"real64":[1.2,1.3,1.4,1.5,1.6,1.7],"imag64":[1.3,1.4,1.5,1.6,1.7,1.8]}
 ```
 
 ## shipping binary

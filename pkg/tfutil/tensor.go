@@ -57,51 +57,6 @@ type PrimitiveTypes interface {
 		string
 }
 
-// Scalar represents a singular value type parametrized by supported types
-type Scalar[T PrimitiveTypes] struct {
-	value T
-}
-
-// NewScalar generates a new scalar parametrized by a data type
-func NewScalar[T PrimitiveTypes](value T) *Scalar[T] {
-	return &Scalar[T]{value: value}
-}
-
-// Value retrieves underlying value of the scalar
-func (g *Scalar[T]) Value() T {
-	return g.value
-}
-
-// String prints numpy representation of scalar value
-func (g *Scalar[T]) String() string {
-	return fmt.Sprint(g.value)
-}
-
-// MarshalJSON serializes scalar with additional metadata such
-// as data types in tensorflow and go. Use scalar in
-// json.Marshal for this method to be called indirectly.
-func (g *Scalar[T]) MarshalJSON() ([]byte, error) {
-	tfTensor, err := tf.NewTensor(g.value)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get tf tensor: %w", err)
-	}
-	return json.Marshal(
-		struct {
-			Type       string `json:"type,omitempty"`
-			TfDataType string `json:"tfDataType,omitempty"`
-			GoDataType string `json:"goDataType,omitempty"`
-			Shape      []int  `json:"shape"`
-			Value      T      `json:"value"`
-		}{
-			Type:       TypeScalar,
-			TfDataType: dataTypeMap[tfTensor.DataType()],
-			GoDataType: fmt.Sprintf("%T", tfTensor.Value()),
-			Shape:      []int{},
-			Value:      g.value,
-		},
-	)
-}
-
 // Tensor is a generic non-scalar data structures that includes
 // vectors, matrices and higher dimensional structures.
 // Tensor's representation is a slice because it is easier
@@ -110,6 +65,19 @@ func (g *Scalar[T]) MarshalJSON() ([]byte, error) {
 type Tensor[T PrimitiveTypes] struct {
 	value []T
 	shape []int
+}
+
+// tensorSerializer serializes tensor to/from JSON data
+type tensorSerializer[T PrimitiveTypes] struct {
+	Type       string    `json:"type,omitempty"`
+	TfDataType string    `json:"tfDataType,omitempty"`
+	GoDataType string    `json:"goDataType,omitempty"`
+	Shape      []int     `json:"shape,omitempty"`
+	Value      []T       `json:"value,omitempty"`
+	Real64     []float64 `json:"real64,omitempty"` // for complex128 data type
+	Imag64     []float64 `json:"imag64,omitempty"` // imaginary part
+	Real32     []float32 `json:"real32,omitempty"` // for complex64 data type
+	Imag32     []float32 `json:"imag32,omitempty"` // imaginary part
 }
 
 // NewTensor creates a new tensor with specified dimensions. If no dimension
@@ -151,21 +119,128 @@ func (g *Tensor[T]) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tf tensor: %w", err)
 	}
-	return json.Marshal(
-		struct {
-			Type       string `json:"type,omitempty"`
-			TfDataType string `json:"tfDataType,omitempty"`
-			GoDataType string `json:"goDataType,omitempty"`
-			Shape      []int  `json:"shape"`
-			Value      []T    `json:"value"`
-		}{
-			Type:       TypeTensor,
-			TfDataType: dataTypeMap[tfTensor.DataType()],
-			GoDataType: fmt.Sprintf("%T", tfTensor.Value()),
-			Shape:      g.shape,
-			Value:      g.value,
-		},
-	)
+
+	// json marshaling requires special handling of complex datatypes
+	switch any(*new(T)).(type) {
+	case complex128:
+		realValues := make([]float64, len(g.value))
+		imagValues := make([]float64, len(g.value))
+		for i, v := range g.value {
+			realValues[i] = real(any(v).(complex128))
+			imagValues[i] = imag(any(v).(complex128))
+		}
+
+		return json.Marshal(
+			tensorSerializer[T]{
+				Type:       TypeTensor,
+				TfDataType: dataTypeMap[tfTensor.DataType()],
+				GoDataType: fmt.Sprintf("%T", *new(T)),
+				Shape:      g.shape,
+				Real64:     realValues,
+				Imag64:     imagValues,
+			},
+		)
+	case complex64:
+		realValues := make([]float32, len(g.value))
+		imagValues := make([]float32, len(g.value))
+		for i, v := range g.value {
+			realValues[i] = real(any(v).(complex64))
+			imagValues[i] = imag(any(v).(complex64))
+		}
+
+		return json.Marshal(
+			tensorSerializer[T]{
+				Type:       TypeTensor,
+				TfDataType: dataTypeMap[tfTensor.DataType()],
+				GoDataType: fmt.Sprintf("%T", *new(T)),
+				Shape:      g.shape,
+				Real32:     realValues,
+				Imag32:     imagValues,
+			},
+		)
+	default:
+		return json.Marshal(
+			tensorSerializer[T]{
+				Type:       TypeTensor,
+				TfDataType: dataTypeMap[tfTensor.DataType()],
+				GoDataType: fmt.Sprintf("%T", *new(T)),
+				Shape:      g.shape,
+				Value:      g.value,
+			},
+		)
+	}
+}
+
+// UnmarshalJSON parses serialized tensor
+func (g *Tensor[T]) UnmarshalJSON(data []byte) error {
+	s := &tensorSerializer[T]{}
+	if err := json.Unmarshal(data, s); err != nil {
+		return fmt.Errorf("failed to parse input: %w", err)
+	}
+
+	if s.Type != TypeTensor {
+		return fmt.Errorf("type is not %s", TypeTensor)
+	}
+
+	zeroValue := *new(T)
+	if s.GoDataType != fmt.Sprintf("%T", zeroValue) {
+		return fmt.Errorf("expected go data type to be %T, received %s in serialized json", zeroValue, s.GoDataType)
+	}
+
+	n, err := numElements(s.Shape)
+	if err != nil {
+		return fmt.Errorf("invalid shape: %w", err)
+	}
+
+	// if complex data is received, build complex array from real and
+	// imaginary parts
+	switch any(*new(T)).(type) {
+	case complex128:
+		if len(s.Real64) != len(s.Imag64) {
+			return fmt.Errorf("complex data corruption, lenghts not equal")
+		}
+
+		if len(s.Real64) != n {
+			return fmt.Errorf("length of data does not match shape values")
+		}
+
+		if len(s.Real32) > 0 || len(s.Imag32) > 0 || len(s.Value) > 0 {
+			return fmt.Errorf("data values found in slices real32, imag32 or value that are expected to be of zero lengths")
+		}
+
+		values := make([]complex128, len(s.Real64))
+		for i := range values {
+			values[i] = complex(s.Real64[i], s.Imag64[i])
+		}
+
+		g.value = any(values).([]T)
+		g.shape = s.Shape
+	case complex64:
+		if len(s.Real32) != len(s.Imag32) {
+			return fmt.Errorf("complex data corruption, lenghts not equal")
+		}
+
+		if len(s.Real32) != n {
+			return fmt.Errorf("length of data does not match shape values")
+		}
+
+		if len(s.Real64) > 0 || len(s.Imag64) > 0 || len(s.Value) > 0 {
+			return fmt.Errorf("data values found in slices real64, imag64 or value that are expected to be of zero lengths")
+		}
+
+		values := make([]complex64, len(s.Real32))
+		for i := range values {
+			values[i] = complex(s.Real32[i], s.Imag32[i])
+		}
+
+		g.value = any(values).([]T)
+		g.shape = s.Shape
+	default:
+		g.value = s.Value
+		g.shape = s.Shape
+	}
+
+	return nil
 }
 
 // Value returns underlying slice representation of the tensor
@@ -207,8 +282,12 @@ func (g *Tensor[T]) GetElement(indices ...int) (T, error) {
 	return g.value[index], nil
 }
 
-// GetMultiDimSlice fetches a multi-dimensional slice corresponding
-// to underlying slice. Please note that it is users responsibility
+// GetMultiDimSlice fetches a multidimensional slice corresponding
+// to underlying slice. For instance a float64 tensor with shape [2, 3, 4]
+// will result in a [][][]float64 slice as output of this method
+// since there are three dimensions. Similarly, a bool tensor with
+// shape [2, 3, 3, 4] will result in [][][][]bool as output.
+// Please note that it is users responsibility
 // to perform type assertion correctly on returned value
 func (g *Tensor[T]) GetMultiDimSlice() (any, error) {
 	tfTensor, err := g.Marshal()
@@ -291,7 +370,12 @@ func (g *Tensor[T]) Marshal() (*tf.Tensor, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new tf session: %w", err)
 		}
-		defer sess.Close()
+		defer func(sess *tf.Session) {
+			err := sess.Close()
+			if err != nil {
+				panic(err)
+			}
+		}(sess)
 
 		// run session feeding feeds and fetching fetches
 		out, err := sess.Run(feeds, fetches, nil)
@@ -399,7 +483,12 @@ func (g *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
 		if err != nil {
 			return fmt.Errorf("failed to create new tf session: %w", err)
 		}
-		defer sess.Close()
+		defer func(sess *tf.Session) {
+			err := sess.Close()
+			if err != nil {
+				panic(err)
+			}
+		}(sess)
 
 		// run session feeding feeds and fetching fetches
 		out, err := sess.Run(feeds, fetches, nil)
@@ -476,27 +565,6 @@ func (g *Tensor[T]) indicesToIndex(indices []int) (int, error) {
 	}
 
 	return index, nil
-}
-
-// Marshal produces an instance of upstream tensor based on scalar value
-func (g *Scalar[T]) Marshal() (*tf.Tensor, error) {
-	tfTensor, err := tf.NewTensor(g.value)
-	if err != nil {
-		return nil, err
-	}
-
-	return tfTensor, nil
-}
-
-// Unmarshal populates receiver scalar using value from input upstream tensor
-func (g *Scalar[T]) Unmarshal(tfTensor *tf.Tensor) error {
-	value, ok := tfTensor.Value().(T)
-	if !ok {
-		return fmt.Errorf("type assertion failed, expected %T, received %T", g.value, tfTensor.Value())
-	}
-
-	g.value = value
-	return nil
 }
 
 // Clone creates a clone of receiver tensor

@@ -518,3 +518,120 @@ func TestMatrixTranspose(t *testing.T) {
 	fmt.Println(input)
 	fmt.Println(output)
 }
+
+func TestTensor_MarshalJSON(t *testing.T) {
+	input, err := NewTensor([]byte{1, 2, 3, 4, 5, 6}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	jb, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output := &Tensor[byte]{}
+	if err := json.Unmarshal(jb, output); err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(input.value, output.value) {
+		t.Fatal("input value is not equal to output value")
+	}
+
+	if len(input.shape) != len(output.shape) {
+		t.Fatal("input shape is not same length as output shape")
+	}
+
+	for i := range input.shape {
+		if input.shape[i] != output.shape[i] {
+			t.Fatal("input shape value is not same as output shape value")
+		}
+	}
+}
+
+func TestTensor_MarshalJSONComplex128(t *testing.T) {
+	input, err := NewTensor(
+		[]complex128{
+			complex(float64(1.2), float64(1.3)),
+			complex(float64(1.3), float64(1.4)),
+			complex(float64(1.4), float64(1.5)),
+			complex(float64(1.5), float64(1.6)),
+			complex(float64(1.6), float64(1.7)),
+			complex(float64(1.7), float64(1.8)),
+		}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	jb, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(jb))
+
+	output := &Tensor[complex128]{}
+	if err := json.Unmarshal(jb, output); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(input.shape) != len(output.shape) {
+		t.Fatal("input shape is not same length as output shape")
+	}
+
+	for i := range input.value {
+		if input.value[i] != output.value[i] {
+			t.Fatal("input and output values do not match")
+		}
+	}
+
+	for i := range input.shape {
+		if input.shape[i] != output.shape[i] {
+			t.Fatal("input shape value is not same as output shape value")
+		}
+	}
+}
+
+func TestTensor_MarshalJSONComplex64(t *testing.T) {
+	input, err := NewTensor(
+		[]complex64{
+			complex(float32(1.2), float32(1.3)),
+			complex(float32(1.3), float32(1.4)),
+			complex(float32(1.4), float32(1.5)),
+			complex(float32(1.5), float32(1.6)),
+			complex(float32(1.6), float32(1.7)),
+			complex(float32(1.7), float32(1.8)),
+		}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	jb, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(jb))
+
+	output := &Tensor[complex64]{}
+	if err := json.Unmarshal(jb, output); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(input.shape) != len(output.shape) {
+		t.Fatal("input shape is not same length as output shape")
+	}
+
+	for i := range input.value {
+		if input.value[i] != output.value[i] {
+			t.Fatal("input and output values do not match")
+		}
+	}
+
+	for i := range input.shape {
+		if input.shape[i] != output.shape[i] {
+			t.Fatal("input shape value is not same as output shape value")
+		}
+	}
+}

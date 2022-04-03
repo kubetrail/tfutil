@@ -36,7 +36,7 @@ func (g *Tensor[T]) Reshape(shape ...int) error {
 	)
 
 	// define reshape operation
-	O := op.Reshape(root, X, Y)
+	Output := op.Reshape(root, X, Y)
 
 	graph, err := root.Finalize()
 	if err != nil {
@@ -49,7 +49,7 @@ func (g *Tensor[T]) Reshape(shape ...int) error {
 	}
 
 	fetches := []tf.Output{
-		O,
+		Output,
 	}
 
 	sess, err := tf.NewSession(
@@ -59,7 +59,12 @@ func (g *Tensor[T]) Reshape(shape ...int) error {
 	if err != nil {
 		return fmt.Errorf("failed to create new tf session: %w", err)
 	}
-	defer sess.Close()
+	defer func(sess *tf.Session) {
+		err := sess.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(sess)
 
 	out, err := sess.Run(feeds, fetches, nil)
 	if err != nil {
