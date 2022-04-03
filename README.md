@@ -40,7 +40,7 @@ module matrix-inverse
 
 go 1.18
 
-require github.com/kubetrail/tfutil v0.0.0-20220402233800-453eae5c8d53
+require github.com/kubetrail/tfutil v0.0.0-20220403162045-9b280c99caa1
 
 require (
 	github.com/tensorflow/tensorflow/tensorflow/go v0.0.0 // indirect
