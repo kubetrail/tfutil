@@ -503,3 +503,18 @@ func TestMatrixInverse(t *testing.T) {
 
 	fmt.Println(output)
 }
+
+func TestMatrixTranspose(t *testing.T) {
+	input, err := NewTensor([]byte{1, 2, 3, 4, 5, 6}, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output, err := Transpose(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(input)
+	fmt.Println(output)
+}
