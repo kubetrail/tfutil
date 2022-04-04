@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
@@ -634,4 +635,98 @@ func TestTensor_MarshalJSONComplex64(t *testing.T) {
 			t.Fatal("input shape value is not same as output shape value")
 		}
 	}
+}
+
+func TestNewFromFunc(t *testing.T) {
+	f := func(int) float64 {
+		return rand.Float64()
+	}
+
+	tensor, err := NewFromFunc(f, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(tensor)
+}
+
+func TestZipToComplex128(t *testing.T) {
+	f := func(int) float64 {
+		return rand.Float64()
+	}
+
+	realT, err := NewFromFunc(f, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imagT, err := NewFromFunc(f, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tensor, err := Complex128(realT, imagT)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(tensor)
+}
+
+func TestZipToComplex64(t *testing.T) {
+	f := func(int) float32 {
+		return rand.Float32()
+	}
+
+	realT, err := NewFromFunc(f, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imagT, err := NewFromFunc(f, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tensor, err := Complex64(realT, imagT)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(tensor)
+}
+
+func TestNewFromFuncComplex128(t *testing.T) {
+	f := func(int) complex128 {
+		return complex(rand.Float64(), rand.Float64())
+	}
+
+	tensor, err := NewFromFunc(f, 2, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(tensor)
+
+	invT, err := MatrixInverse(tensor)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(invT)
+}
+
+func TestTensor_Apply(t *testing.T) {
+	tensor, err := NewTensor([]string{"a", "b", "c", "d"}, 2, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tensor.Apply(
+		func(input string) string {
+			return strings.ToUpper(input)
+		},
+	)
+
+	fmt.Println(tensor)
 }

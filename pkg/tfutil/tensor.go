@@ -587,3 +587,11 @@ func (g *Tensor[T]) Clone() (*Tensor[T], error) {
 
 	return out, nil
 }
+
+// Apply applies input function f over each element of
+// tensor transforming it in place
+func (g *Tensor[T]) Apply(f func(T) T) {
+	for i := range g.value {
+		g.value[i] = f(g.value[i])
+	}
+}
