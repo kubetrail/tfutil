@@ -27,7 +27,7 @@ usage below.
 
 Download this repo to a folder and cd to it.
 ```bash
-go test -v ./
+go test -v ./...
 ```
 
 ## usage
@@ -110,7 +110,7 @@ julia -e "x = $(go run main.go 2>/dev/null | head -n 1 | sed -e 's/\] \[/\]; \[/
 ### working with indices
 For instance, create a 3x4 byte matrix:
 ```go
-    tensor, err := NewTensor([]byte, 3, 4)
+    tensor, err := NewTensor(make([]byte, 3*4), 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ Similarly get elements from specific indices using:
 tensor.GetElement(i, j)
 ```
 
-And obtain a `[][]byte` multi-dimensional slice using:
+And obtain a `[][]byte` multi-dimensional slice using type assertion:
 ```go
 tensor.GetMultiDimSlice().([][]byte)
 ```
@@ -243,8 +243,8 @@ More details at the
 [commit history](https://github.com/kubetrail-labs/tensorflow/commit/9a3cb0962c983435b9d103fe9f8e2ee9fe0cb000)
 
 ## building libtensorflow
-`libtensorflow` is not available as a precompiled library from upstream. Below are unofficial steps
-to build it for `arm64`:
+`libtensorflow` is not available as a [precompiled c-library](https://www.tensorflow.org/install/lang_c) 
+from upstream for `arm64` arch. Below are unofficial steps to build it for `arm64`:
 
 First setup a Raspberry Pi 4 with 8GB memory 
 a [64-bit OS](https://downloads.raspberrypi.org/raspios_arm64/images)

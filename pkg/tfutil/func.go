@@ -2,6 +2,7 @@ package tfutil
 
 import (
 	"fmt"
+	"math/cmplx"
 
 	tfutilop "github.com/kubetrail/tfutil/pkg/op"
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
@@ -167,4 +168,136 @@ func Transpose[T PrimitiveTypes](input *Tensor[T], perm ...int) (*Tensor[T], err
 	}
 
 	return output, nil
+}
+
+// NewFromFunc generates a new tensor using an input function that is called for
+// each element
+func NewFromFunc[T PrimitiveTypes](f func(int) T, shape ...int) (*Tensor[T], error) {
+	n, err := numElements(shape)
+	if err != nil {
+		return nil, fmt.Errorf("invalid shape: %w", err)
+	}
+
+	values := make([]T, n)
+	for i := range values {
+		values[i] = f(i)
+	}
+
+	return NewTensor(values, shape...)
+}
+
+// Complex128 packs input real and imaginary parts to a complex128 valued tensor
+func Complex128(realT, imagT *Tensor[float64]) (*Tensor[complex128], error) {
+	if realT == nil || imagT == nil {
+		return nil, fmt.Errorf("inputs can't be nil")
+	}
+
+	if len(realT.shape) != len(imagT.shape) {
+		return nil, fmt.Errorf("input tensor shape lengths do not match")
+	}
+
+	for i := range realT.shape {
+		if realT.shape[i] != imagT.shape[i] {
+			return nil, fmt.Errorf("input tensor shape values do not match")
+		}
+	}
+
+	if len(realT.value) != len(imagT.value) {
+		return nil, fmt.Errorf("input tensor value lengths do not match")
+	}
+
+	c := make([]complex128, len(realT.value))
+	for i := range realT.value {
+		c[i] = complex(realT.value[i], imagT.value[i])
+	}
+
+	return NewTensor(c, realT.shape...)
+}
+
+// Complex64 packs input real and imaginary parts to a complex64 valued tensor
+func Complex64(realT, imagT *Tensor[float32]) (*Tensor[complex64], error) {
+	if realT == nil || imagT == nil {
+		return nil, fmt.Errorf("inputs can't be nil")
+	}
+
+	if len(realT.shape) != len(imagT.shape) {
+		return nil, fmt.Errorf("input tensor shape lengths do not match")
+	}
+
+	for i := range realT.shape {
+		if realT.shape[i] != imagT.shape[i] {
+			return nil, fmt.Errorf("input tensor shape values do not match")
+		}
+	}
+
+	if len(realT.value) != len(imagT.value) {
+		return nil, fmt.Errorf("input tensor value lengths do not match")
+	}
+
+	c := make([]complex64, len(realT.value))
+	for i := range realT.value {
+		c[i] = complex(realT.value[i], imagT.value[i])
+	}
+
+	return NewTensor(c, realT.shape...)
+}
+
+// Real64 pulls real elements from input tensor and packs
+// them into a new tensor of float64 type
+func Real64(complexT *Tensor[complex128]) *Tensor[float64] {
+	values := make([]float64, len(complexT.value))
+	for i := range values {
+		values[i] = real(complexT.value[i])
+	}
+
+	realT, _ := NewTensor(values, complexT.shape...)
+	return realT
+}
+
+// Imag64 pulls imaginary elements from input tensor and packs
+// them into a new tensor of float64 type
+func Imag64(complexT *Tensor[complex128]) *Tensor[float64] {
+	values := make([]float64, len(complexT.value))
+	for i := range values {
+		values[i] = imag(complexT.value[i])
+	}
+
+	realT, _ := NewTensor(values, complexT.shape...)
+	return realT
+}
+
+// Real32 pulls real elements from input tensor and packs
+// them into a new tensor of float32 type
+func Real32(complexT *Tensor[complex64]) *Tensor[float32] {
+	values := make([]float32, len(complexT.value))
+	for i := range values {
+		values[i] = real(complexT.value[i])
+	}
+
+	realT, _ := NewTensor(values, complexT.shape...)
+	return realT
+}
+
+// Imag32 pulls imaginary elements from input tensor and packs
+// them into a new tensor of float32 type
+func Imag32(complexT *Tensor[complex64]) *Tensor[float32] {
+	values := make([]float32, len(complexT.value))
+	for i := range values {
+		values[i] = imag(complexT.value[i])
+	}
+
+	realT, _ := NewTensor(values, complexT.shape...)
+	return realT
+}
+
+// Abs returns absolute valued tensor such that each element
+// of output is absolute value of each of the complex values
+// of input
+func Abs(complexT *Tensor[complex128]) *Tensor[float64] {
+	f := func(i int) float64 {
+		return cmplx.Abs(complexT.value[i])
+	}
+
+	absT, _ := NewFromFunc(f, complexT.shape...)
+	return absT
 }
