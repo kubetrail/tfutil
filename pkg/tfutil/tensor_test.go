@@ -426,45 +426,6 @@ func TestTensor_ScaleComplex128(t *testing.T) {
 	fmt.Println(x)
 }
 
-func TestTensor_Reshape(t *testing.T) {
-	m, err := NewTensor([]int32{1, 2, 3, 4, 5, 6}, 2, 3)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := m.Reshape(3, 2); err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(m)
-}
-
-func TestTensor_ReshapeString(t *testing.T) {
-	m, err := NewTensor([]string{"abcd", "1234", "c", "d0", "ee", "ffff"}, 2, 3)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := m.Reshape(3, 2); err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(m)
-}
-
-func TestTensor_ReshapeBool(t *testing.T) {
-	m, err := NewTensor([]bool{true, true, false, true, false, false}, 2, 3)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := m.Reshape(3, 2); err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(m)
-}
-
 func TestTensor_Inv(t *testing.T) {
 	m, err := NewTensor(make([]float64, 25), 5, 5)
 	if err != nil {
