@@ -17,6 +17,28 @@ func castToInt64[T constraints.Integer](shape []T) []int64 {
 	return newShape
 }
 
+// equal check element by element equality of two slices of
+// same type
+func equal[T PrimitiveTypes | int](x, y []T) bool {
+	if len(x) != len(y) {
+		return false
+	}
+
+	for i := range x {
+		if x[i] != y[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func clone[T PrimitiveTypes | int](x []T) []T {
+	y := make([]T, len(x))
+	copy(y, x)
+	return y
+}
+
 // numElements is the total number of elements represented by
 // shape slice.
 // error is returned if shape value is negative or zero.

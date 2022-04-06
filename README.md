@@ -32,26 +32,18 @@ go test -v ./...
 
 ## usage
 ### example matrix inversion
-Create a new go module with following `go.mod` file. As you can see
-we have a `replace` clause to pin to particular commit ID's of the
-forked tensorflow code so that it is "go-gettable"
+Create a new go module and `go get` this repo:
+```bash
+go get github.com/kubetrail/tfutil
 ```
-module matrix-inverse
 
-go 1.18
-
-require github.com/kubetrail/tfutil v0.0.0-20220404154920-1c91592f0ea8
-
-require (
-	github.com/tensorflow/tensorflow/tensorflow/go v0.0.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
-)
-
+Pl. make sure to have following `replace` clause to pin to a 
+particular commit ID's of the forked tensorflow repo:
+```
 replace github.com/tensorflow/tensorflow/tensorflow/go => github.com/kubetrail-labs/tensorflow/tensorflow/go v0.0.0-20220330185145-9a3cb0962c98
 ```
 
 Write `Go` code:
-
 ```go
 package main
 

@@ -16,10 +16,6 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 	bb := &bytes.Buffer{}
 	bw := bufio.NewWriter(bb)
 
-	if _, err := fmt.Fprintf(bw, "shape: %v, dataType: %T\n", g.shape, *new(T)); err != nil {
-		return nil, fmt.Errorf("failed to write to buffer: %w", err)
-	}
-
 	table := tablewriter.NewWriter(bw)
 	table.SetBorder(false)
 	table.SetColumnSeparator(" ")
@@ -29,14 +25,24 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 	case 0:
 		return nil, nil
 	case 1:
-		table.SetHeader([]string{fmt.Sprintf("shape:%v, dataType:%T", g.shape, *new(T))})
-		row := make([]string, len(g.value))
+		if _, err := fmt.Fprintf(bw, "[ # vector shape: %v, dataType: %T\n", g.shape, *new(T)); err != nil {
+			return nil, fmt.Errorf("failed to write to buffer: %w", err)
+		}
+
+		row := make([]string, len(g.value)+2)
 		for i, v := range g.value {
-			row[i] = fmt.Sprint(v)
+			row[i+1] = fmt.Sprint(v)
 		}
 		table.Append(row)
+		table.Render()
+
+		if _, err := fmt.Fprintln(bw, "]"); err != nil {
+			return nil, fmt.Errorf("failed to write to buffer: %w", err)
+		}
 	case 2:
-		table.SetHeader([]string{fmt.Sprintf("shape:%v, dataType:%T", g.shape, *new(T))})
+		if _, err := fmt.Fprintf(bw, "[ # matrix shape: %v, dataType: %T\n", g.shape, *new(T)); err != nil {
+			return nil, fmt.Errorf("failed to write to buffer: %w", err)
+		}
 		mdSlice, err := g.GetMultiDimSlice()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get multi dim slice: %w", err)
@@ -46,10 +52,6 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 			return nil, fmt.Errorf("failed to type assert on multi dim slice")
 		}
 
-		r := make([]string, g.shape[1]+2)
-		r[0] = "["
-		table.Append(r)
-
 		for _, row := range mat {
 			r := make([]string, len(row)+2)
 			for q, v := range row {
@@ -58,74 +60,48 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 			table.Append(r)
 		}
 
-		r = make([]string, g.shape[1]+2)
-		r[len(r)-1] = "]"
-		table.Append(r)
-	default:
-		n, err := numElements(g.shape[2:])
-		if err != nil {
-			return nil, fmt.Errorf("failed to collapse dimensions: %w", err)
-		}
+		table.Render()
 
-		if _, err := fmt.Fprintf(bw, "printing %d matrices sequentially, each with shape: %v\n",
-			n, []int{g.shape[0], g.shape[1]}); err != nil {
+		if _, err := fmt.Fprintln(bw, "]"); err != nil {
 			return nil, fmt.Errorf("failed to write to buffer: %w", err)
 		}
+	default:
+		start := make([]int, len(g.shape))
+		end := clone(g.shape)
+		for i := 0; i < g.shape[len(g.shape)-1]; i++ {
+			start[len(start)-1] = i
+			end[len(end)-1] = i + 1
 
-		x, err := g.Clone()
-		if err != nil {
-			return nil, fmt.Errorf("failed to clone tensor: %w", err)
-		}
+			if _, err := fmt.Fprintf(bw,
+				"[ # sub tensor start: %v, end: %v, reshpaed: %v\n",
+				start, end, g.shape[:len(g.shape)-1],
+			); err != nil {
+				return nil, err
+			}
 
-		if err := x.Reshape([]int{n, g.shape[0], g.shape[1]}...); err != nil {
-			return nil, fmt.Errorf("failed to reshape tensor: %w", err)
-		}
-
-		r := make([]string, g.shape[1]+2)
-		r[0] = "["
-		table.Append(r)
-		for i := 0; i < n; i++ {
-			sub, err := x.Sub([]int{i, 0, 0}, []int{i + 1, g.shape[0], g.shape[1]}, nil)
+			sub, err := g.Sub(start, end, nil)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get sub tensor: %w", err)
 			}
 
-			if err := sub.Reshape(g.shape[0], g.shape[1]); err != nil {
+			if err := sub.Reshape(g.shape[:len(g.shape)-1]...); err != nil {
 				return nil, fmt.Errorf("failed to reshape: %w", err)
 			}
 
-			mdSlice, err := sub.GetMultiDimSlice()
+			b, err := sub.PrettyPrint()
 			if err != nil {
-				return nil, fmt.Errorf("failed to get multi dim slice: %w", err)
+				return nil, err
 			}
 
-			mat, ok := mdSlice.([][]T)
-			if !ok {
-				return nil, fmt.Errorf("failed to type assert on multi dim slice")
+			if _, err := bw.Write(b); err != nil {
+				return nil, err
 			}
 
-			r := make([]string, g.shape[1]+2)
-			r[0] = "["
-			table.Append(r)
-
-			for _, row := range mat {
-				r := make([]string, len(row)+2)
-				for q, v := range row {
-					r[q+1] = fmt.Sprintf(" %v ", v)
-				}
-				table.Append(r)
+			if _, err := fmt.Fprintln(bw, "]"); err != nil {
+				return nil, err
 			}
-
-			r = make([]string, g.shape[1]+2)
-			r[len(r)-1] = "]"
-			table.Append(r)
 		}
-		r = make([]string, g.shape[1]+2)
-		r[len(r)-1] = "]"
-		table.Append(r)
 	}
-
-	table.Render()
 
 	if err := bw.Flush(); err != nil {
 		return nil, fmt.Errorf("failed to flush writer: %w", err)
