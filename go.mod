@@ -7,7 +7,11 @@ require (
 	golang.org/x/exp v0.0.0-20220328175248-053ad81199eb
 )
 
-require google.golang.org/protobuf v1.28.0 // indirect
+require (
+	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
+)
 
 // find out latest commit for branch v2.8.0-proto
 // somewhere in another new clean module do:
