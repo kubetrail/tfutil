@@ -616,7 +616,7 @@ func TestTensor_Apply(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tensor.Apply(
+	tensor.ApplyFunc(
 		func(input string) string {
 			return strings.ToUpper(input)
 		},
