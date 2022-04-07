@@ -103,14 +103,6 @@ func NewTensor[T PrimitiveTypes](value []T, shape ...int) (*Tensor[T], error) {
 	}, nil
 }
 
-// String prints a numpy version of tensor value
-// ignoring any errors that may occur during data
-// transformation to numpy version
-func (g *Tensor[T]) String() string {
-	m, _ := g.GetMultiDimSlice()
-	return fmt.Sprint(m)
-}
-
 // MarshalJSON serializes tensor with additional metadata such
 // as tensorflow data type and go data type. Use tensor
 // in json.Marshal for this method to be called indirectly.
