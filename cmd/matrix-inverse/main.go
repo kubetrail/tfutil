@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/kubetrail/tfutil/pkg/tfutil"
+	"github.com/tensorflow/tensorflow/tensorflow/go/op"
 )
 
 func main() {
@@ -21,9 +22,25 @@ func main() {
 		log.Fatal(err)
 	}
 
+	z, err := tfutil.MatrixMultiply(x, y)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// apply transformation operators in sequence with
+	// last one being applied first. In this case
+	// the output will be from abs(round(z))
+	z, err = tfutil.ApplyOperators(z, op.Abs, op.Round)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println("matrix:")
 	fmt.Println(x)
 
 	fmt.Println("matrix inverse:")
 	fmt.Println(y)
+
+	fmt.Println("matrix multiplied by its inverse is identity matrix")
+	fmt.Println(z)
 }

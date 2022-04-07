@@ -152,6 +152,70 @@ func MatrixMultiply[T PrimitiveTypes](x, y *Tensor[T]) (*Tensor[T], error) {
 	return output, nil
 }
 
+// Round rounds the elements of input matrix
+func Round[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
+	x, err := input.Marshal()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tf tensor: %w", err)
+	}
+
+	root := op.NewScope()
+	X := op.Placeholder(
+		root.SubScope("X"),
+		x.DataType(),
+		op.PlaceholderShape(
+			tf.MakeShape(castToInt64(input.shape)...),
+		),
+	)
+
+	// operation to invert matrix.
+	// needs a square matrix
+	Output := op.Round(root, X)
+
+	graph, err := root.Finalize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to import graph: %w", err)
+	}
+
+	feeds := map[tf.Output]*tf.Tensor{
+		X: x,
+	}
+
+	fetches := []tf.Output{
+		Output,
+	}
+
+	sess, err := tf.NewSession(
+		graph,
+		&tf.SessionOptions{},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new tf session: %w", err)
+	}
+	defer func(sess *tf.Session) {
+		err := sess.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(sess)
+
+	out, err := sess.Run(feeds, fetches, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run tf session: %w", err)
+	}
+
+	if len(out) != 1 {
+		return nil, fmt.Errorf("expected session run output to have length 1, got %d", len(out))
+	}
+
+	output := &Tensor[T]{}
+	if err := output.Unmarshal(out[0]); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal output: %w", err)
+	}
+
+	return output, nil
+}
+
 // Transpose transposes a tensor. perm refers to the new order
 // of dimensions. For instance, if input tensor is 2x3 and perm
 // for a standard transpose should be [1, 0] referring to a shape
