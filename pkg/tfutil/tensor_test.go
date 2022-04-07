@@ -172,17 +172,6 @@ func TestNewTensorFloat64(t *testing.T) {
 	}
 }
 
-func TestTfTensorValueShapeOfScalar(t *testing.T) {
-	tfTensor, err := tf.NewTensor(float32(3.14))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println("shape:", tfTensor.Shape())
-	fmt.Println("value:", tfTensor.Value())
-	fmt.Println("dataType:", tfTensor.DataType())
-}
-
 func TestTensor_GetElement(t *testing.T) {
 	expected := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	tensor, err := NewTensor(expected, 3, 3)
