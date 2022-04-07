@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/kubetrail/tfutil/pkg/tfutil"
+	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 	"github.com/tensorflow/tensorflow/tensorflow/go/op"
 )
 
@@ -17,12 +18,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	y, err := tfutil.MatrixInverse(x)
+	// wrap op.MatrixInverse operator in a func literal
+	// and apply on input x
+	y, err := tfutil.ApplyOperators(
+		x,
+		func(scope *op.Scope, x tf.Output) tf.Output {
+			return op.MatrixInverse(scope, x)
+		},
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	z, err := tfutil.MatrixMultiply(x, y)
+	// wrap op.MatMul operator in a func literal and
+	// apply on inputs x and y
+	z, err := tfutil.ApplyOperatorXY(
+		x, y,
+		func(scope *op.Scope, x, y tf.Output) tf.Output {
+			return op.MatMul(scope, x, y)
+		},
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

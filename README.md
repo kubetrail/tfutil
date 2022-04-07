@@ -8,6 +8,8 @@ using type parametrization
 > The use of this library does not guarantee security or usability for any
 > particular purpose. Please review the code and use at your own risk.
 
+> Please also note that the API is not yet stable and can change.
+
 ## installation
 This step assumes you have [Go compiler toolchain](https://go.dev/dl/)
 installed on your system with version at least Go 1.18. The library
@@ -53,6 +55,7 @@ import (
 	"math/rand"
 
 	"github.com/kubetrail/tfutil/pkg/tfutil"
+	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 	"github.com/tensorflow/tensorflow/tensorflow/go/op"
 )
 
@@ -64,12 +67,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	y, err := tfutil.MatrixInverse(x)
+	// wrap op.MatrixInverse operator in a func literal
+	// and apply on input x
+	y, err := tfutil.ApplyOperators(
+		x,
+		func(scope *op.Scope, x tf.Output) tf.Output {
+			return op.MatrixInverse(scope, x)
+		},
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	z, err := tfutil.MatrixMultiply(x, y)
+	// wrap op.MatMul operator in a func literal and
+	// apply on inputs x and y
+	z, err := tfutil.ApplyOperatorXY(
+		x, y,
+		func(scope *op.Scope, x, y tf.Output) tf.Output {
+			return op.MatMul(scope, x, y)
+		},
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -231,6 +248,30 @@ The JSON serialization looks as follows:
     0.8136399609900968
   ]
 }
+```
+
+## applying operators
+Operators such as matrix inverse, matrix multiplication, transpose, rounding etc.
+can be applied in a `functional` way using these two functions:
+```go
+func ApplyOperators[T PrimitiveTypes](input *Tensor[T],
+	operators ...func(*op.Scope, tf.Output) tf.Output) (*Tensor[T], error) {...}
+```
+and
+```go
+func ApplyOperatorXY[T PrimitiveTypes](x, y *Tensor[T],
+	operator func(*op.Scope, tf.Output, tf.Output) tf.Output) (*Tensor[T], error) {...}
+```
+
+An example of applying operators successively is shown above where absolute values
+of a matrix are obtained after rounding it, effectively applying abs(round(x))
+
+Upstream operators that take optional arguments can be accommodated using closures:
+```go
+    operator := func(scope *op.Scope, x, y tf.Output) tf.Output {
+        attrs := []op.MatMulAttr{} // populate before passing
+        return op.MatMul(scope, x, y, attrs...)
+    }
 ```
 
 ## shipping binary
