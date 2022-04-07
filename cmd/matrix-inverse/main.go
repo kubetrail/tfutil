@@ -9,17 +9,9 @@ import (
 )
 
 func main() {
-	// to invert a 5 x 5 matrix
-	n := 5
-
-	// generate random matrix input data
-	input := make([]float64, n*n)
-	for i := range input {
-		input[i] = rand.Float64()
-	}
-
-	// create a matrix with shape n x n
-	x, err := tfutil.NewTensor(input, n, n)
+	// create a random square matrix using a generator func
+	x, err := tfutil.NewFromFunc(
+		func(int) float64 { return rand.Float64() }, 5, 5)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,6 +21,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("input matrix:", x)
-	fmt.Println("inverted matrix:", y)
+	fmt.Println("matrix:")
+	fmt.Println(x)
+
+	fmt.Println("matrix inverse:")
+	fmt.Println(y)
 }

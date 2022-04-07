@@ -8,11 +8,8 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-// PrettyPrint prints matrices striding the tensor in chunks of
-// first two dimensions along unit steps of remaining dimensions.
-// For instance, a tensor with shape [p, q, r, s] will print r*s
-// matrices, each with shape of [p, q]
-func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
+// String prints matrices in human-readable format
+func (g *Tensor[T]) String() string {
 	bb := &bytes.Buffer{}
 	bw := bufio.NewWriter(bb)
 
@@ -23,10 +20,10 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 	shape := g.shape
 	switch len(shape) {
 	case 0:
-		return nil, nil
+		return ""
 	case 1:
 		if _, err := fmt.Fprintf(bw, "[ # vector shape: %v, dataType: %T\n", g.shape, *new(T)); err != nil {
-			return nil, fmt.Errorf("failed to write to buffer: %w", err)
+			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
 
 		row := make([]string, len(g.value)+2)
@@ -37,25 +34,25 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 		table.Render()
 
 		if _, err := fmt.Fprintln(bw, "]"); err != nil {
-			return nil, fmt.Errorf("failed to write to buffer: %w", err)
+			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
 	case 2:
 		if _, err := fmt.Fprintf(bw, "[ # matrix shape: %v, dataType: %T\n", g.shape, *new(T)); err != nil {
-			return nil, fmt.Errorf("failed to write to buffer: %w", err)
+			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
 		mdSlice, err := g.GetMultiDimSlice()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get multi dim slice: %w", err)
+			return fmt.Errorf("failed to get multi dim slice: %w", err).Error()
 		}
 		mat, ok := mdSlice.([][]T)
 		if !ok {
-			return nil, fmt.Errorf("failed to type assert on multi dim slice")
+			return fmt.Errorf("failed to type assert on multi dim slice").Error()
 		}
 
 		for _, row := range mat {
 			r := make([]string, len(row)+2)
 			for q, v := range row {
-				r[q+1] = fmt.Sprintf(" %v ", v)
+				r[q+1] = fmt.Sprint(v)
 			}
 			table.Append(r)
 		}
@@ -63,7 +60,7 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 		table.Render()
 
 		if _, err := fmt.Fprintln(bw, "]"); err != nil {
-			return nil, fmt.Errorf("failed to write to buffer: %w", err)
+			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
 	default:
 		start := make([]int, len(g.shape))
@@ -76,36 +73,33 @@ func (g *Tensor[T]) PrettyPrint() ([]byte, error) {
 				"[ # sub tensor start: %v, end: %v, reshpaed: %v\n",
 				start, end, g.shape[:len(g.shape)-1],
 			); err != nil {
-				return nil, err
+				return err.Error()
 			}
 
 			sub, err := g.Sub(start, end, nil)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get sub tensor: %w", err)
+				return fmt.Errorf("failed to get sub tensor: %w", err).Error()
 			}
 
 			if err := sub.Reshape(g.shape[:len(g.shape)-1]...); err != nil {
-				return nil, fmt.Errorf("failed to reshape: %w", err)
+				return fmt.Errorf("failed to reshape: %w", err).Error()
 			}
 
-			b, err := sub.PrettyPrint()
-			if err != nil {
-				return nil, err
-			}
+			b := sub.String()
 
-			if _, err := bw.Write(b); err != nil {
-				return nil, err
+			if _, err := bw.Write([]byte(b)); err != nil {
+				return fmt.Errorf("failed to write to output buffer: %w", err).Error()
 			}
 
 			if _, err := fmt.Fprintln(bw, "]"); err != nil {
-				return nil, err
+				return fmt.Errorf("failed to write to output buffer: %w", err).Error()
 			}
 		}
 	}
 
 	if err := bw.Flush(); err != nil {
-		return nil, fmt.Errorf("failed to flush writer: %w", err)
+		return fmt.Errorf("failed to flush writer: %w", err).Error()
 	}
 
-	return bb.Bytes(), nil
+	return bb.String()
 }
