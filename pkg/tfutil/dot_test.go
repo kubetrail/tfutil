@@ -7,7 +7,7 @@ import (
 func TestDotApply(t *testing.T) {
 	var tensors []*Tensor[int32]
 	for i := 1; i <= 10; i++ {
-		tensor, err := NewFromFunc(func(j int) int32 { return int32(i + j) }, 3, 4)
+		tensor, err := NewTensorFromFunc(func(j int) int32 { return int32(i + j) }, 3, 4)
 		if err != nil {
 			t.Fatal(err)
 		}

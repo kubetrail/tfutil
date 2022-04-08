@@ -33,6 +33,37 @@ go test -v ./...
 ```
 
 ## usage
+This is a Go generics based library, which defines a `Tensor` as:
+```go
+type Tensor[T PrimitiveTypes] struct {
+	value []T
+	shape []int
+}
+```
+
+A type parameterized `Tensor` can be instantiated using one of these following
+ways:
+```go
+func NewTensor[T PrimitiveTypes](value []T, shape ...int) (*Tensor[T], error) {...}
+func NewTensorFromAny[T PrimitiveTypes](value any) (*Tensor[T], error) {...}
+func NewTensorFromFunc[T PrimitiveTypes](f func(int) T, shape ...int) (*Tensor[T], error) {...}
+```
+
+where, `PrimitiveTypes` are:
+```go
+type PrimitiveTypes interface {
+	bool |
+		int8 | int16 | int32 | int64 |
+		uint8 | uint16 | uint32 | uint64 |
+		float32 | float64 |
+		complex64 | complex128 |
+		string
+}
+```
+
+Using generics (starting in Go 1.18), a tensor can be created that holds
+values of any of these types.
+
 ### example matrix inversion
 Create a new go module and `go get` this repo:
 ```bash
