@@ -13,7 +13,7 @@ import (
 
 func TestApplyOperators(t *testing.T) {
 	// create a random square matrix using a generator func
-	x, err := NewFromFunc(
+	x, err := NewTensorFromFunc(
 		func(int) float64 { return rand.Float64() }, 5, 5)
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +51,7 @@ func TestApplyOperators(t *testing.T) {
 
 func TestApplyDualInputOperator(t *testing.T) {
 	// create a random square matrix using a generator func
-	x, err := NewFromFunc(
+	x, err := NewTensorFromFunc(
 		func(int) float64 { return rand.Float64() }, 5, 5)
 	if err != nil {
 		t.Fatal(err)

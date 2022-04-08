@@ -10,12 +10,12 @@ import (
 func TestMatrixMultiplyFloat64(t *testing.T) {
 	rand.Seed(0)
 	f := func(int) float64 { return rand.Float64() }
-	x, err := NewFromFunc(f, 3, 4)
+	x, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	y, err := NewFromFunc(f, 4, 2)
+	y, err := NewTensorFromFunc(f, 4, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,12 +42,12 @@ func TestMatrixMultiplyBool(t *testing.T) {
 		return false
 	}
 
-	x, err := NewFromFunc(f, 3, 4)
+	x, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	y, err := NewFromFunc(f, 3, 4)
+	y, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,12 +63,12 @@ func TestMatrixMultiplyString(t *testing.T) {
 		return string([]byte{byte(rand.Intn(26) + 'a')})
 	}
 
-	x, err := NewFromFunc(f, 3, 4)
+	x, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	y, err := NewFromFunc(f, 3, 4)
+	y, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}

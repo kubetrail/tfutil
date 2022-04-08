@@ -12,7 +12,7 @@ import (
 
 func main() {
 	// create a random square matrix using a generator func
-	x, err := tfutil.NewFromFunc(
+	x, err := tfutil.NewTensorFromFunc(
 		func(int) float64 { return rand.Float64() }, 5, 5)
 	if err != nil {
 		log.Fatal(err)

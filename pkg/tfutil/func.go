@@ -125,22 +125,6 @@ func Transpose[T PrimitiveTypes](input *Tensor[T], perm ...int) (*Tensor[T], err
 	return output, nil
 }
 
-// NewFromFunc generates a new tensor using an input function that is called for
-// each element
-func NewFromFunc[T PrimitiveTypes](f func(int) T, shape ...int) (*Tensor[T], error) {
-	n, err := numElements(shape)
-	if err != nil {
-		return nil, fmt.Errorf("invalid shape: %w", err)
-	}
-
-	values := make([]T, n)
-	for i := range values {
-		values[i] = f(i)
-	}
-
-	return NewTensor(values, shape...)
-}
-
 // Complex128 packs input real and imaginary parts to a complex128 valued tensor
 func Complex128(realT, imagT *Tensor[float64]) (*Tensor[complex128], error) {
 	if realT == nil || imagT == nil {
@@ -253,6 +237,6 @@ func Abs(complexT *Tensor[complex128]) *Tensor[float64] {
 		return cmplx.Abs(complexT.value[i])
 	}
 
-	absT, _ := NewFromFunc(f, complexT.shape...)
+	absT, _ := NewTensorFromFunc(f, complexT.shape...)
 	return absT
 }

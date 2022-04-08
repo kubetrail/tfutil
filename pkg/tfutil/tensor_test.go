@@ -536,7 +536,7 @@ func TestNewFromFunc(t *testing.T) {
 		return rand.Float64()
 	}
 
-	tensor, err := NewFromFunc(f, 2, 3)
+	tensor, err := NewTensorFromFunc(f, 2, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -549,12 +549,12 @@ func TestZipToComplex128(t *testing.T) {
 		return rand.Float64()
 	}
 
-	realT, err := NewFromFunc(f, 2, 3)
+	realT, err := NewTensorFromFunc(f, 2, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imagT, err := NewFromFunc(f, 2, 3)
+	imagT, err := NewTensorFromFunc(f, 2, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -572,12 +572,12 @@ func TestZipToComplex64(t *testing.T) {
 		return rand.Float32()
 	}
 
-	realT, err := NewFromFunc(f, 2, 3)
+	realT, err := NewTensorFromFunc(f, 2, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imagT, err := NewFromFunc(f, 2, 3)
+	imagT, err := NewTensorFromFunc(f, 2, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -595,7 +595,7 @@ func TestNewFromFuncComplex128(t *testing.T) {
 		return complex(rand.Float64(), rand.Float64())
 	}
 
-	tensor, err := NewFromFunc(f, 2, 2)
+	tensor, err := NewTensorFromFunc(f, 2, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -623,4 +623,19 @@ func TestTensor_Apply(t *testing.T) {
 	)
 
 	fmt.Println(tensor)
+}
+
+func TestNewTensorFromAny(t *testing.T) {
+	value := [][]byte{{1, 2}, {3, 4}}
+	m, err := NewTensorFromAny[byte](value)
+
+	jb, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := "{\"type\":\"tensor\",\"tfDataType\":\"Uint8\",\"goDataType\":\"uint8\",\"shape\":[2,2],\"value\":\"AQIDBA==\"}"
+	if !bytes.Equal(jb, []byte(expected)) {
+		t.Fatal("new tensor does not match expected tensor")
+	}
 }

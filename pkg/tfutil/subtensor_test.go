@@ -5,7 +5,7 @@ import (
 )
 
 func TestTensor_Sub(t *testing.T) {
-	x, err := NewFromFunc(func(i int) int32 { return int32(i) }, 2, 3, 4)
+	x, err := NewTensorFromFunc(func(i int) int32 { return int32(i) }, 2, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +21,7 @@ func TestTensor_Sub(t *testing.T) {
 }
 
 func TestTensor_Sub2(t *testing.T) {
-	x, err := NewFromFunc(func(i int) int32 { return int32(i) }, 2, 3, 4)
+	x, err := NewTensorFromFunc(func(i int) int32 { return int32(i) }, 2, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}

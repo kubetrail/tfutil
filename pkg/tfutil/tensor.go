@@ -103,6 +103,40 @@ func NewTensor[T PrimitiveTypes](value []T, shape ...int) (*Tensor[T], error) {
 	}, nil
 }
 
+// NewTensorFromFunc generates a new tensor using an input function that is called for
+// each element
+func NewTensorFromFunc[T PrimitiveTypes](f func(int) T, shape ...int) (*Tensor[T], error) {
+	n, err := numElements(shape)
+	if err != nil {
+		return nil, fmt.Errorf("invalid shape: %w", err)
+	}
+
+	values := make([]T, n)
+	for i := range values {
+		values[i] = f(i)
+	}
+
+	return NewTensor(values, shape...)
+}
+
+// NewTensorFromAny does not take shape inputs and infers shape of
+// tensor from the dimensions of the value, as in value being
+// a multidimensional slice of data. The type parametrization
+// must be provided at the time of instantiating this function.
+func NewTensorFromAny[T PrimitiveTypes](value any) (*Tensor[T], error) {
+	tfTensor, err := tf.NewTensor(value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tf tensor: %w", err)
+	}
+
+	tensor := &Tensor[T]{}
+	if err := tensor.Unmarshal(tfTensor); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tf tensor: %w", err)
+	}
+
+	return tensor, nil
+}
+
 // MarshalJSON serializes tensor with additional metadata such
 // as tensorflow data type and go data type. Use tensor
 // in json.Marshal for this method to be called indirectly.
