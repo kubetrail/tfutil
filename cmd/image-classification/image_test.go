@@ -69,7 +69,7 @@ func getLabels() ([]string, error) {
 		}
 	}
 
-	if f.IsDir() {
+	if f != nil && f.IsDir() {
 		return nil, fmt.Errorf("a folder by the name %s exists", labelsFile)
 	}
 
@@ -83,7 +83,8 @@ func getLabels() ([]string, error) {
 }
 
 func loadImage(fileName string, t *testing.T) {
-	if _, err := os.Stat(fileName); err != nil {
+	f, err := os.Stat(fileName)
+	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			resp, err := http.Get("https://raw.githubusercontent.com/tensorflow/tensorflow/v2.8.0/tensorflow/examples/label_image/data/grace_hopper.jpg")
 			if err != nil {
@@ -107,14 +108,18 @@ func loadImage(fileName string, t *testing.T) {
 			t.Fatalf("failed to stat image file: %s", err)
 		}
 	}
+
+	if f != nil && f.IsDir() {
+		t.Fatalf("a folder by the name %s exists", fileName)
+	}
 }
 
-// TestImageClassificationTwoSteps tests image classification in two
+// TestImageClassificationUsingTwoGraphs tests image classification in two
 // steps. In first step, a Go API based tensorflow graph is constructed
 // that outputs a resized and scaled image tensor of the shape
 // [1 299 299 3]. Such tensor is then fed in the second step
 // to upstream frozen pretrained graph.
-func TestImageClassificationTwoSteps(t *testing.T) {
+func TestImageClassification_00_UsingTwoGraphs(t *testing.T) {
 	labels, err := getLabels()
 	if err != nil {
 		t.Fatal(err)
@@ -160,7 +165,10 @@ func TestImageClassificationTwoSteps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	session.Close()
+
+	if err := session.Close(); err != nil {
+		t.Fatal(err)
+	}
 
 	graphDef, err := graph.LoadFile("inception_v3_2016_08_28_frozen.pb")
 	if err != nil {
@@ -208,17 +216,17 @@ func TestImageClassificationTwoSteps(t *testing.T) {
 		}
 	}
 
-	if maxIndex >= 0 {
-		fmt.Println(labels[maxIndex])
+	if maxIndex < 0 || labels[maxIndex] != "military uniform" {
+		t.Fatal("image was not classified correctly")
 	}
 }
 
-// TestIntegrateGraphs adds a few extra nodes to the upstream
+// TestImageClassification_01_MergeTwoGraphsIntoOne adds a few extra nodes to the upstream
 // pretrained frozen graph in order for it to work directly
 // using a filename as an input. The integrated graph is written
 // to the same folder in three separate formats although
 // only binary formatted graph will be required in subsequent tests
-func TestIntegrateGraphs(t *testing.T) {
+func TestImageClassification_01_MergeTwoGraphsIntoOne(t *testing.T) {
 	labels, err := getLabels()
 	if err != nil {
 		t.Fatal(err)
@@ -316,7 +324,10 @@ func TestIntegrateGraphs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	session.Close()
+
+	if err := session.Close(); err != nil {
+		t.Fatal(err)
+	}
 
 	labelValues, ok := (outTensors[0].Value()).([][]float32)
 	if !ok {
@@ -332,15 +343,15 @@ func TestIntegrateGraphs(t *testing.T) {
 		}
 	}
 
-	if maxIndex >= 0 {
-		fmt.Println(labels[maxIndex])
+	if maxIndex < 0 || labels[maxIndex] != "military uniform" {
+		t.Fatal("image was not classified correctly")
 	}
 }
 
-// TestClassifyImageUsingIntegratedGraph tests image classification
+// TestImageClassification_02_UsingIntegratedGraph tests image classification
 // using integrated graph such that the only input to it is the
 // filename.
-func TestClassifyImageUsingIntegratedGraph(t *testing.T) {
+func TestImageClassification_02_UsingIntegratedGraph(t *testing.T) {
 	labels, err := getLabels()
 	if err != nil {
 		t.Fatal(err)
@@ -400,7 +411,7 @@ func TestClassifyImageUsingIntegratedGraph(t *testing.T) {
 		}
 	}
 
-	if maxIndex >= 0 {
-		fmt.Println(fileName, ":", labels[maxIndex])
+	if maxIndex < 0 || labels[maxIndex] != "military uniform" {
+		t.Fatal("image was not classified correctly")
 	}
 }
