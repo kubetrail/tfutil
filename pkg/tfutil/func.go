@@ -29,6 +29,60 @@ func MatrixMultiply[T PrimitiveTypes](x, y *Tensor[T]) (*Tensor[T], error) {
 	)
 }
 
+// Cast casts input tensor into output tensor data type
+func Cast[T, S PrimitiveTypes](input *Tensor[T], output *Tensor[S]) error {
+	s, err := tf.NewTensor(*new(S))
+	if err != nil {
+		return fmt.Errorf("failed to form tensor for destination data type: %w", err)
+	}
+
+	x, err := input.Marshal()
+	if err != nil {
+		return fmt.Errorf("failed to form tensor for source input: %w", err)
+	}
+
+	root := op.NewScope()
+	Output := op.Cast(root, op.Const(root, x), s.DataType())
+
+	graph, err := root.Finalize()
+	if err != nil {
+		return fmt.Errorf("failed to import graph: %w", err)
+	}
+
+	fetches := []tf.Output{
+		Output,
+	}
+
+	sess, err := tf.NewSession(
+		graph,
+		&tf.SessionOptions{},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create new tf session: %w", err)
+	}
+	defer func(sess *tf.Session) {
+		err := sess.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(sess)
+
+	out, err := sess.Run(nil, fetches, nil)
+	if err != nil {
+		return fmt.Errorf("failed to run tf session: %w", err)
+	}
+
+	if len(out) != 1 {
+		return fmt.Errorf("expected session run output to have length 1, got %d", len(out))
+	}
+
+	if err := output.Unmarshal(out[0]); err != nil {
+		return fmt.Errorf("failed to unmarshal output: %w", err)
+	}
+
+	return nil
+}
+
 // Transpose transposes a tensor. perm refers to the new order
 // of dimensions. For instance, if input tensor is 2x3 and perm
 // for a standard transpose should be [1, 0] referring to a shape

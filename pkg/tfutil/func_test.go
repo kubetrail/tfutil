@@ -104,3 +104,23 @@ func TestMatrixMultiplyString(t *testing.T) {
 		t.Fatal("expected matrix multiplication to fail for string matrices")
 	}
 }
+
+func TestCast(t *testing.T) {
+	rand.Seed(0)
+	f := func(int) int32 { return rand.Int31n(100) }
+	x, err := NewTensorFromFunc(f, 3, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	y := &Tensor[float64]{}
+	if err := Cast(x, y); err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range x.value {
+		if float64(x.value[i]) != y.value[i] {
+			t.Fatal("output does not match input")
+		}
+	}
+}

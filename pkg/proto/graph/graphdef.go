@@ -76,11 +76,11 @@ func (g *Def) PrintDotNotation() ([]byte, error) {
 	for _, nodeDef := range g.graphDef.Node {
 		color, ok := colorMap[nodeDef.Op]
 		if ok {
-			if _, err := fmt.Fprintf(bw, "\"%s\" [fillcolor=%s, style=filled]\n", nodeDef.Name, color); err != nil {
+			if _, err := fmt.Fprintf(bw, "\"%s\" [fillcolor=\"%s\", style=\"filled\", label=\"%s\"]\n", nodeDef.Name, color, nodeDef.Name); err != nil {
 				return nil, fmt.Errorf("failed to write to buffer: %w", err)
 			}
 		} else {
-			if _, err := fmt.Fprintf(bw, "\"%s\"\n", nodeDef.Name); err != nil {
+			if _, err := fmt.Fprintf(bw, "\"%s\" [label=\"%s\"]\n", nodeDef.Name, nodeDef.Name); err != nil {
 				return nil, fmt.Errorf("failed to write to buffer: %w", err)
 			}
 		}
@@ -396,13 +396,13 @@ func (g *Def) SetNodes(nodeDefs ...*node.Def) {
 // growing the node pool of receiver graph
 func (g *Def) Append(graphDef *Def) error {
 	existingNames := make(map[string]struct{})
-	for _, node := range g.graphDef.Node {
-		existingNames[node.Name] = struct{}{}
+	for _, nodeDef := range g.graphDef.Node {
+		existingNames[nodeDef.Name] = struct{}{}
 	}
 
-	for _, node := range graphDef.graphDef.Node {
-		if _, ok := existingNames[node.Name]; ok {
-			return fmt.Errorf("preexisting name %s found in input graph, failed to append", node.Name)
+	for _, nodeDef := range graphDef.graphDef.Node {
+		if _, ok := existingNames[nodeDef.Name]; ok {
+			return fmt.Errorf("preexisting name %s found in input graph, failed to append", nodeDef.Name)
 		}
 	}
 
@@ -437,17 +437,17 @@ func (g *Def) ApplyPrefix(prefix string) error {
 // an existing name
 func (g *Def) RenameNode(name, newName string) error {
 	names := make(map[string]struct{})
-	for _, node := range g.graphDef.Node {
-		names[node.Name] = struct{}{}
+	for _, nodeDef := range g.graphDef.Node {
+		names[nodeDef.Name] = struct{}{}
 	}
 
-	for i, node := range g.graphDef.Node {
-		if node.Name == name {
+	for i, nodeDef := range g.graphDef.Node {
+		if nodeDef.Name == name {
 			if _, ok := names[newName]; ok {
 				return fmt.Errorf("another node with name %s found in graph", newName)
 			}
-			node.Name = newName
-			g.graphDef.Node[i] = node
+			nodeDef.Name = newName
+			g.graphDef.Node[i] = nodeDef
 			return nil
 		}
 	}

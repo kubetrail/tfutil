@@ -33,12 +33,12 @@ func TestMatmul(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	nx, err := node.NewDef("x", attr.Constant, attrX)
+	nx, err := node.NewNodeDef("x", attr.Constant, attrX)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ny, err := node.NewDef("y", attr.Constant, attrY)
+	ny, err := node.NewNodeDef("y", attr.Constant, attrY)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestMatmul(t *testing.T) {
 		},
 	}
 
-	mul, err := node.NewDef("mul", "MatMul", attrValue, "x", "y")
+	mul, err := node.NewNodeDef("mul", "MatMul", attrValue, "x", "y")
 	if err != nil {
 		t.Fatal(err)
 	}
