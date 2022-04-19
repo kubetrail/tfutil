@@ -10,7 +10,9 @@ type Def struct {
 	NodeDef *node_def_go_proto.NodeDef
 }
 
-func NewDef(name, op string, attrValue *attr.Value, inputs ...string) (*Def, error) {
+// NewNodeDef returns a new instance of Def using lower level raw inputs
+// such as name and op as strings and attr values
+func NewNodeDef(name, op string, attrValue *attr.Value, inputs ...string) (*Def, error) {
 	return &Def{
 		NodeDef: &node_def_go_proto.NodeDef{
 			Name:                  name,
@@ -24,6 +26,7 @@ func NewDef(name, op string, attrValue *attr.Value, inputs ...string) (*Def, err
 	}, nil
 }
 
+// GetAttr returns attr value for the input keys in a node
 func (g *Def) GetAttr(keys ...string) (*attr.Value, error) {
 	if len(keys) == 0 {
 		return &attr.Value{
@@ -46,14 +49,17 @@ func (g *Def) GetAttr(keys ...string) (*attr.Value, error) {
 	return &attr.Value{Attr: attrValues}, nil
 }
 
+// SetAttr sets attr value for a node
 func (g *Def) SetAttr(attrValue *attr.Value) {
 	g.NodeDef.Attr = attrValue.Attr
 }
 
+// GetDevice returns the device associated with the node
 func (g *Def) GetDevice() string {
 	return g.NodeDef.Device
 }
 
+// SetDevice sets the device for the node
 func (g *Def) SetDevice(device string) {
 	g.NodeDef.Device = device
 }
