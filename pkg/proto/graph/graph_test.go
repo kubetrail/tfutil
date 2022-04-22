@@ -87,3 +87,104 @@ func TestGraph(t *testing.T) {
 		t.Fatal("graphdef does not match expected graphdef")
 	}
 }
+
+func TestDef_UnmarshalJSON(t *testing.T) {
+	graphData := `
+{
+  "node": [
+    {
+      "name": "testNode1",
+      "op": "Const",
+      "attr": {
+        "dtype": {
+          "Value": {
+            "Type": 3
+          }
+        },
+        "value": {
+          "Value": {
+            "Tensor": {
+              "dtype": 3,
+              "tensor_shape": {
+                "dim": [
+                  {
+                    "size": 2
+                  }
+                ]
+              },
+              "tensor_content": "AQAAAOkDAAA="
+            }
+          }
+        }
+      }
+    }
+  ],
+  "versions": {
+    "producer": 987
+  },
+  "library": {}
+}
+`
+
+	graphDef, err := NewGraphDef()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := json.Unmarshal([]byte(graphData), graphDef); err == nil {
+		t.Fatal("expected json unmarshal to error out")
+	}
+}
+
+func TestListNodesOptionWithInputs(t *testing.T) {
+	root := op.NewScope()
+
+	x, err := tf.NewTensor([][]float64{{1, 2}, {3, 4}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	X := op.Placeholder(
+		root.SubScope("X"),
+		x.DataType(),
+		op.PlaceholderShape(
+			tf.MakeShape(2, 2),
+		),
+	)
+
+	Y := op.Placeholder(
+		root.SubScope("Y"),
+		x.DataType(),
+		op.PlaceholderShape(
+			tf.MakeShape(2, 2),
+		),
+	)
+
+	_ = op.MatMul(root, X, Y)
+
+	graph, err := root.Finalize()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	graphDef, err := NewGraphDef()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := graphDef.Import(graph); err != nil {
+		t.Fatal(err)
+	}
+
+	opts := ListNodesOptionWithInputs("X/Placeholder")
+	nodes := graphDef.ListNodes(opts)
+	if len(nodes) != 1 || nodes[0] != "MatMul" {
+		t.Fatal("listed not are not expected")
+	}
+
+	opts = ListNodesOptionWithInputs("X/Placeholder", "Y/Placeholder")
+	nodes = graphDef.ListNodes(opts)
+	if len(nodes) != 1 || nodes[0] != "MatMul" {
+		t.Fatal("listed not are not expected")
+	}
+}

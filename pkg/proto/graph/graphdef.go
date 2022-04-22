@@ -49,7 +49,7 @@ func (g *Def) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON defines how receiver can be json unmarshaled
 func (g *Def) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, g)
+	return fmt.Errorf("json unmarshal is currently not supported")
 }
 
 // String defines how receiver can be printed
@@ -325,23 +325,23 @@ func ListNodesOptionOp(op string) ListNodesOption {
 // ListNodesOptionWithInputs checks if each of the inputs for a node
 // matches one from the input
 func ListNodesOptionWithInputs(inputs ...string) ListNodesOption {
-	inputMap := make(map[string]struct{}, len(inputs))
-	for _, input := range inputs {
-		inputMap[input] = struct{}{}
-	}
 	return func(node *node.Def) bool {
 		if len(inputs) == 0 && len(node.NodeDef.Input) == 0 {
 			return true
 		}
-		// otherwise, each node input must be present in the input map
-		if len(node.NodeDef.Input) != len(inputMap) {
-			return false
-		}
+
+		inputMap := make(map[string]struct{}, len(node.NodeDef.Input))
 		for _, input := range node.NodeDef.Input {
+			inputMap[input] = struct{}{}
+		}
+
+		// each of the inputs must be present in the node inputs
+		for _, input := range inputs {
 			if _, ok := inputMap[input]; !ok {
 				return false
 			}
 		}
+
 		return true
 	}
 }
