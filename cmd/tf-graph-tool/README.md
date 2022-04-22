@@ -23,7 +23,7 @@ go install github.com/kubetrail/tfutil/tree/main/cmd/tf-graph-tool@latest
 Optionally, install shell completion. For instance, `bash` completion can be installed
 by adding following line to your `.bashrc`:
 ```bash
-source <(mksecret completion bash)
+source <(tf-graph-tool completion bash)
 ```
 
 ## download an example graph
