@@ -6,8 +6,8 @@ require (
 	github.com/kubetrail/tfutil v0.0.0-20220422135208-f5cd85321930
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
-	github.com/tensorflow/tensorflow/tensorflow/go v0.0.0
 	google.golang.org/protobuf v1.28.0
+	github.com/wamuir/graft v0.4.0
 )
 
 require (
@@ -33,5 +33,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
-
-replace github.com/tensorflow/tensorflow/tensorflow/go => github.com/kubetrail-labs/tensorflow/tensorflow/go v0.0.0-20220330185145-9a3cb0962c98

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
+	tf "github.com/wamuir/graft/tensorflow"
 )
 
 // load models that provide helper functionality.

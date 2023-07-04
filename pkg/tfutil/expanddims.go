@@ -3,8 +3,8 @@ package tfutil
 import (
 	"fmt"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/op"
+	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/op"
 )
 
 // ExpandDims adds a new dimension

@@ -10,7 +10,7 @@ import (
 	"github.com/kubetrail/tfutil/pkg/proto/graph"
 	"github.com/kubetrail/tfutil/pkg/tfutil"
 	"github.com/spf13/cobra"
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
+	tf "github.com/wamuir/graft/tensorflow"
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 )

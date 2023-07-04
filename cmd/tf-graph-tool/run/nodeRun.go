@@ -9,7 +9,7 @@ import (
 	"github.com/kubetrail/tfutil/pkg/tfutil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
+	tf "github.com/wamuir/graft/tensorflow"
 )
 
 func NodeRun(cmd *cobra.Command, args []string) error {

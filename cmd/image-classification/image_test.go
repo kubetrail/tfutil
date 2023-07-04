@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"github.com/kubetrail/tfutil/pkg/proto/graph"
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/op"
+	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/op"
 )
 
 func getLabels() ([]string, error) {

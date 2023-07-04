@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 kubetrail.io authors
-
 */
 package cmd
 

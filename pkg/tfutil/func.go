@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/cmplx"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/op"
+	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/op"
 )
 
 // MatrixInverse inverts the tensor assuming it is a square matrix,

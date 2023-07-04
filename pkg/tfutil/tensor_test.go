@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
+	tf "github.com/wamuir/graft/tensorflow"
 )
 
 func TestNewScalarFloat64(t *testing.T) {

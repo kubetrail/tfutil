@@ -1,7 +1,7 @@
 package attr
 
 import (
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/attr_value_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/attr_value_go_proto"
 )
 
 type Value struct {

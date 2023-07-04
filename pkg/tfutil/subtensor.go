@@ -3,8 +3,8 @@ package tfutil
 import (
 	"fmt"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/op"
+	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/op"
 )
 
 // Sub fetches sub a new tensor without altering original.
@@ -12,10 +12,10 @@ import (
 // of zeros indicating starting from the beginning of the tensor. Length of
 // such slice is always equal to the receiver dimension indicating start
 // value for each dimension.
-//Similarly, endLengths indicate end value similar
+// Similarly, endLengths indicate end value similar
 // to how a sub slicing end index works. if endLengths is nil, it is set
 // to the shape slice of the receiver tensor.
-//strides are jumps and if nil is set to slice of ones.
+// strides are jumps and if nil is set to slice of ones.
 // The lengths of each of these inputs is, therefore, either nil or
 // equal to the length of the shape of the receiver tensor
 func (g *Tensor[T]) Sub(start, end, stride []int) (*Tensor[T], error) {
