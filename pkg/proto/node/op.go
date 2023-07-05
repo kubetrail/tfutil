@@ -5,10 +5,10 @@ import (
 	"bytes"
 
 	"github.com/kubetrail/tfutil/pkg/proto/attr"
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/graph_go_proto"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/node_def_go_proto"
-	"github.com/tensorflow/tensorflow/tensorflow/go/op"
+	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/core/framework/graph_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/node_def_go_proto"
+	"github.com/wamuir/graft/tensorflow/op"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -5,11 +5,11 @@ import (
 	"bytes"
 	"fmt"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/attr_value_go_proto"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/tensor_go_proto"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/tensor_shape_go_proto"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/types_go_proto"
+	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/core/framework/attr_value_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/tensor_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/tensor_shape_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/types_go_proto"
 )
 
 // NewValueFromTensor embeds an input tensor into attr values that become part of

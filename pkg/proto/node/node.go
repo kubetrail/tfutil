@@ -2,8 +2,8 @@ package node
 
 import (
 	"github.com/kubetrail/tfutil/pkg/proto/attr"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/attr_value_go_proto"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/node_def_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/attr_value_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/node_def_go_proto"
 )
 
 type Def struct {

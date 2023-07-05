@@ -6,9 +6,9 @@ import (
 
 	"github.com/kubetrail/tfutil/pkg/proto/attr"
 	"github.com/kubetrail/tfutil/pkg/proto/node"
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/attr_value_go_proto"
-	"github.com/tensorflow/tensorflow/tensorflow/go/core/framework/types_go_proto"
+	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/core/framework/attr_value_go_proto"
+	"github.com/wamuir/graft/tensorflow/core/framework/types_go_proto"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
+	tf "github.com/wamuir/graft/tensorflow"
 )
 
 // Scalar represents a singular value type parametrized by supported types
