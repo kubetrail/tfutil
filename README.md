@@ -20,12 +20,7 @@ First make sure you have downloaded and installed `TensorFlow`
 sure you are able to build and run the "hello-world" as 
 described on that page.
 
-Furthermore, the upstream [tensorflow](https://github.com/tensorflow/tensorflow) 
-code does not provide protocol buffer files for Go and does not currently
-have a `go.mod` file, which makes it harder to use. To ease the workflow,
-tensorflow code has been [forked](https://github.com/kubetrail-labs/tensorflow)
-and needs to be added via a `replace` clause in your `go.mod` file. See 
-usage below.
+> Please use TF version v2.12.0. Older versions may not work
 
 Download this repo to a folder and cd to it.
 ```bash
@@ -344,18 +339,9 @@ root@c549661fd90f:/# ldd /tf/matrix-inverse
 root@c549661fd90f:/# 
 ```
 
-## changes to upstream tensorflow code
-Following changes were made to generate protocol buffer Go files for upstream version `v2.8.0`:
-* A `go.mod` file was added
-* Assumptions on folders for writing new protobuf go files were changed in `generate.sh`. This
-allowed running `go generate` from the downloaded folder
-
-More details at the 
-[commit history](https://github.com/kubetrail-labs/tensorflow/commit/9a3cb0962c983435b9d103fe9f8e2ee9fe0cb000)
-
 ## building libtensorflow
 `libtensorflow` is not available as a [precompiled c-library](https://www.tensorflow.org/install/lang_c) 
-from upstream for `arm64` arch. Below are unofficial steps to build it for `arm64`:
+from upstream for `arm64` arch. Below are unofficial steps to build it for `linux/arm64`:
 
 First setup a Raspberry Pi 4 with 8GB memory 
 a [64-bit OS](https://downloads.raspberrypi.org/raspios_arm64/images)
@@ -408,12 +394,6 @@ Configure tensorflow build
 ```
 
 Build tensorflow library and test... be patient, this can take several hours.
-```bash
-nohup bazel test --config opt //tensorflow/tools/lib_package:libtensorflow_test &
-```
-
-reboot now
-
 ```bash
 nohup bazel build --config opt //tensorflow/tools/lib_package:libtensorflow &
 ```

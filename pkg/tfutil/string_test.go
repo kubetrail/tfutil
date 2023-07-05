@@ -36,6 +36,7 @@ func TestTensor_PrintTensor2(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	x.String()
 	fmt.Println(x)
 }
 
