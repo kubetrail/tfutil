@@ -1,14 +1,14 @@
 # tfutil
 `tfutil` is a Go library on top of `TensorFlow` Go interface to make it
-easier to work with tensors. As the name suggests, this library aims to
-provide utility functions for tensors such as serialization and type safety
-using type parametrization
+easier to work with tensors.
 
 # disclaimer
 > The use of this library does not guarantee security or usability for any
 > particular purpose. Please review the code and use at your own risk.
 
 > Please also note that the API is not yet stable and can change.
+
+> TF version v2.12.0, older versions may not work
 
 ## installation
 This step assumes you have [Go compiler toolchain](https://go.dev/dl/)
@@ -396,6 +396,11 @@ Configure tensorflow build
 Build tensorflow library and test... be patient, this can take several hours.
 ```bash
 nohup bazel build --config opt //tensorflow/tools/lib_package:libtensorflow &
+```
+
+Tar package can be found here:
+```bash
+ls -la bazel-bin/tensorflow/tools/lib_package/libtensorflow.tar.gz
 ```
 
 ## references
