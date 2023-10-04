@@ -68,7 +68,7 @@ func TestGraph(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expectedPbTxt := "node:{name:\"X/Placeholder\"  op:\"Placeholder\"  attr:{key:\"dtype\"  value:{type:DT_DOUBLE}}  attr:{key:\"shape\"  value:{shape:{dim:{size:2}  dim:{size:2}}}}}  node:{name:\"Y/Placeholder\"  op:\"Placeholder\"  attr:{key:\"dtype\"  value:{type:DT_DOUBLE}}  attr:{key:\"shape\"  value:{shape:{dim:{size:2}  dim:{size:2}}}}}  node:{name:\"MatMul\"  op:\"MatMul\"  input:\"X/Placeholder\"  input:\"Y/Placeholder\"  attr:{key:\"T\"  value:{type:DT_DOUBLE}}  attr:{key:\"transpose_a\"  value:{b:false}}  attr:{key:\"transpose_b\"  value:{b:false}}}  versions:{producer:1395}  library:{}"
+	expectedPbTxt := `node:{name:"X/Placeholder"  op:"Placeholder"  attr:{key:"dtype"  value:{type:DT_DOUBLE}}  attr:{key:"shape"  value:{shape:{dim:{size:2}  dim:{size:2}}}}}  node:{name:"Y/Placeholder"  op:"Placeholder"  attr:{key:"dtype"  value:{type:DT_DOUBLE}}  attr:{key:"shape"  value:{shape:{dim:{size:2}  dim:{size:2}}}}}  node:{name:"MatMul"  op:"MatMul"  input:"X/Placeholder"  input:"Y/Placeholder"  attr:{key:"T"  value:{type:DT_DOUBLE}}  attr:{key:"transpose_a"  value:{b:false}}  attr:{key:"transpose_b"  value:{b:false}}}  versions:{producer:1575}  library:{}`
 	graphDefExpected, err := NewGraphDef()
 	if err != nil {
 		t.Fatal(err)
