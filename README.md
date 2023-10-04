@@ -1,6 +1,8 @@
 # tfutil
-`tfutil` is a Go library on top of `TensorFlow` Go interface to make it
+`tfutil` is a generics based Go library on top of `TensorFlow` Go interface to make it
 easier to work with tensors.
+
+> TF version v2.14.0
 
 # disclaimer
 > The use of this library does not guarantee security or usability for any
@@ -8,11 +10,9 @@ easier to work with tensors.
 
 > Please also note that the API is not yet stable and can change.
 
-> TF version v2.12.0, older versions may not work
-
 ## installation
 This step assumes you have [Go compiler toolchain](https://go.dev/dl/)
-installed on your system with version at least Go 1.18. The library
+installed on your system with version at least Go 1.21.1. The library
 makes use of `go` generics.
 
 First make sure you have downloaded and installed `TensorFlow`
@@ -20,11 +20,11 @@ First make sure you have downloaded and installed `TensorFlow`
 sure you are able to build and run the "hello-world" as 
 described on that page.
 
-> Please use TF version v2.12.0. Older versions may not work
+> Please use TF version v2.14.0. Older versions may not work
 
 Download this repo to a folder and cd to it.
 ```bash
-go test -v ./...
+go test ./...
 ```
 
 ## usage
@@ -63,12 +63,6 @@ values of any of these types.
 Create a new go module and `go get` this repo:
 ```bash
 go get github.com/kubetrail/tfutil
-```
-
-Pl. make sure to have following `replace` clause to pin to a 
-particular commit ID's of the forked tensorflow repo:
-```
-replace github.com/tensorflow/tensorflow/tensorflow/go => github.com/kubetrail-labs/tensorflow/tensorflow/go v0.0.0-20220330185145-9a3cb0962c98
 ```
 
 Write `Go` code:
