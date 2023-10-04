@@ -1,12 +1,12 @@
 module github.com/kubetrail/tfutil/cmd/tf-graph-tool
 
-go 1.20
+go 1.21
 
 require (
-	github.com/kubetrail/tfutil v0.0.0-20230705140501-1f0a739a87f7
+	github.com/kubetrail/tfutil v0.6.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
-	github.com/wamuir/graft v0.4.0
+	github.com/wamuir/graft v0.6.0
 	google.golang.org/protobuf v1.31.0
 )
 
