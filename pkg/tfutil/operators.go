@@ -31,4 +31,12 @@ var (
 		}
 		return op.Round(scope, outputs[0]), nil
 	}
+
+	// MatrixInverseOp performs matrix inversion
+	MatrixInverseOp = func(scope *op.Scope, outputs ...tf.Output) (tf.Output, error) {
+		if len(outputs) != 1 {
+			return tf.Output{}, fmt.Errorf("operator MatrixInverse needs len outputs = 1, got %d", len(outputs))
+		}
+		return op.MatrixInverse(scope, outputs[0]), nil
+	}
 )
