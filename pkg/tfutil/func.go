@@ -11,42 +11,61 @@ import (
 // MatrixInverse inverts the tensor assuming it is a square matrix,
 // otherwise it will throw error
 func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
-	return ApplyOperators(
-		input,
-		func(scope *op.Scope, x tf.Output) tf.Output {
-			return op.MatrixInverse(scope, x)
-		},
-	)
+	inverseOperator := func(scope *op.Scope, outputs ...tf.Output) (tf.Output, error) {
+		if len(outputs) != 1 {
+			return tf.Output{}, fmt.Errorf("operator MatrixInverse needs len outputs = 1, got %d", len(outputs))
+		}
+		return op.MatrixInverse(scope, outputs[0]), nil
+	}
+
+	if clone, err := input.Clone(); err != nil {
+		return nil, fmt.Errorf("failed to clone input tensor: %w", err)
+	} else {
+		if err := clone.Apply(inverseOperator); err != nil {
+			return nil, fmt.Errorf("failed to invert input tensor: %w", err)
+		}
+		return clone, nil
+	}
 }
 
 // MatrixMultiply performs matrix multiplication
 func MatrixMultiply[T PrimitiveTypes](x, y *Tensor[T]) (*Tensor[T], error) {
-	return ApplyOperatorXY(
-		x, y,
-		func(scope *op.Scope, x, y tf.Output) tf.Output {
-			return op.MatMul(scope, x, y)
-		},
+	mulOp := func(scope *op.Scope, outputs ...tf.Output) (tf.Output, error) {
+		if len(outputs) != 2 {
+			return tf.Output{}, fmt.Errorf("operator MatMul needs len output = 2, got %d", len(outputs))
+		}
+		return op.MatMul(scope, outputs[0], outputs[1]), nil
+	}
+
+	return Apply(
+		mulOp, x, y,
 	)
 }
 
-// Cast casts input tensor into output tensor data type
-func Cast[T, S PrimitiveTypes](input *Tensor[T], output *Tensor[S]) error {
-	s, err := tf.NewTensor(*new(S))
-	if err != nil {
-		return fmt.Errorf("failed to form tensor for destination data type: %w", err)
+// Cast casts input tensor of data type T to a new tensor
+// of data type S
+func Cast[S, T PrimitiveTypes](input *Tensor[T]) (*Tensor[S], error) {
+	output := &Tensor[S]{
+		value: make([]S, 1),
+		shape: make([]int, 1),
 	}
 
 	x, err := input.Marshal()
 	if err != nil {
-		return fmt.Errorf("failed to form tensor for source input: %w", err)
+		return nil, fmt.Errorf("failed to form tensor for source input: %w", err)
+	}
+
+	y, err := output.Marshal()
+	if err != nil {
+		return nil, fmt.Errorf("failed to form tensor for source output: %w", err)
 	}
 
 	root := op.NewScope()
-	Output := op.Cast(root, op.Const(root, x), s.DataType())
+	Output := op.Cast(root, op.Const(root, x), y.DataType())
 
 	graph, err := root.Finalize()
 	if err != nil {
-		return fmt.Errorf("failed to import graph: %w", err)
+		return nil, fmt.Errorf("failed to import graph: %w", err)
 	}
 
 	fetches := []tf.Output{
@@ -58,7 +77,7 @@ func Cast[T, S PrimitiveTypes](input *Tensor[T], output *Tensor[S]) error {
 		&tf.SessionOptions{},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create new tf session: %w", err)
+		return nil, fmt.Errorf("failed to create new tf session: %w", err)
 	}
 	defer func(sess *tf.Session) {
 		err := sess.Close()
@@ -69,18 +88,18 @@ func Cast[T, S PrimitiveTypes](input *Tensor[T], output *Tensor[S]) error {
 
 	out, err := sess.Run(nil, fetches, nil)
 	if err != nil {
-		return fmt.Errorf("failed to run tf session: %w", err)
+		return nil, fmt.Errorf("failed to run tf session: %w", err)
 	}
 
 	if len(out) != 1 {
-		return fmt.Errorf("expected session run output to have length 1, got %d", len(out))
+		return nil, fmt.Errorf("expected session run output to have length 1, got %d", len(out))
 	}
 
 	if err := output.Unmarshal(out[0]); err != nil {
-		return fmt.Errorf("failed to unmarshal output: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal output: %w", err)
 	}
 
-	return nil
+	return output, nil
 }
 
 // Transpose transposes a tensor. perm refers to the new order

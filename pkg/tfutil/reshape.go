@@ -8,8 +8,8 @@ import (
 )
 
 // Reshape reshapes to new shape
-func (g *Tensor[T]) Reshape(shape ...int) error {
-	x, err := g.Marshal()
+func (tensor *Tensor[T]) Reshape(shape ...int) error {
+	x, err := tensor.Marshal()
 	if err != nil {
 		return fmt.Errorf("failed to get tf tensor: %w", err)
 	}
@@ -24,7 +24,7 @@ func (g *Tensor[T]) Reshape(shape ...int) error {
 		root.SubScope("X"),
 		x.DataType(),
 		op.PlaceholderShape(
-			tf.MakeShape(castToInt64(g.shape)...),
+			tf.MakeShape(castToInt64(tensor.shape)...),
 		),
 	)
 	Y := op.Placeholder(
@@ -75,7 +75,7 @@ func (g *Tensor[T]) Reshape(shape ...int) error {
 		return fmt.Errorf("expected session run output to have length 1, got %d", len(out))
 	}
 
-	if err := g.Unmarshal(out[0]); err != nil {
+	if err := tensor.Unmarshal(out[0]); err != nil {
 		return fmt.Errorf("failed to unmarshal output: %w", err)
 	}
 

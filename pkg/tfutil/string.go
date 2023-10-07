@@ -9,7 +9,7 @@ import (
 )
 
 // String prints matrices in human-readable format
-func (g *Tensor[T]) String() string {
+func (tensor *Tensor[T]) String() string {
 	bb := &bytes.Buffer{}
 	bw := bufio.NewWriter(bb)
 
@@ -17,17 +17,17 @@ func (g *Tensor[T]) String() string {
 	table.SetBorder(false)
 	table.SetColumnSeparator(" ")
 
-	shape := g.shape
+	shape := tensor.shape
 	switch len(shape) {
 	case 0:
 		return ""
 	case 1:
-		if _, err := fmt.Fprintf(bw, "[ # vector shape: %v, dataType: %T\n", g.shape, *new(T)); err != nil {
+		if _, err := fmt.Fprintf(bw, "[ # vector shape: %v, dataType: %T\n", tensor.shape, *new(T)); err != nil {
 			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
 
-		row := make([]string, len(g.value)+2)
-		for i, v := range g.value {
+		row := make([]string, len(tensor.value)+2)
+		for i, v := range tensor.value {
 			row[i+1] = fmt.Sprint(v)
 		}
 		table.Append(row)
@@ -37,10 +37,10 @@ func (g *Tensor[T]) String() string {
 			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
 	case 2:
-		if _, err := fmt.Fprintf(bw, "[ # matrix shape: %v, dataType: %T\n", g.shape, *new(T)); err != nil {
+		if _, err := fmt.Fprintf(bw, "[ # matrix shape: %v, dataType: %T\n", tensor.shape, *new(T)); err != nil {
 			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
-		mdSlice, err := g.GetMultiDimSlice()
+		mdSlice, err := tensor.GetMultiDimSlice()
 		if err != nil {
 			return fmt.Errorf("failed to get multi dim slice: %w", err).Error()
 		}
@@ -63,25 +63,25 @@ func (g *Tensor[T]) String() string {
 			return fmt.Errorf("failed to write to buffer: %w", err).Error()
 		}
 	default:
-		start := make([]int, len(g.shape))
-		end := clone(g.shape)
-		for i := 0; i < g.shape[len(g.shape)-1]; i++ {
+		start := make([]int, len(tensor.shape))
+		end := clone(tensor.shape)
+		for i := 0; i < tensor.shape[len(tensor.shape)-1]; i++ {
 			start[len(start)-1] = i
 			end[len(end)-1] = i + 1
 
 			if _, err := fmt.Fprintf(bw,
 				"[ # sub tensor start: %v, end: %v, reshpaed: %v\n",
-				start, end, g.shape[:len(g.shape)-1],
+				start, end, tensor.shape[:len(tensor.shape)-1],
 			); err != nil {
 				return err.Error()
 			}
 
-			sub, err := g.Sub(start, end, nil)
+			sub, err := tensor.Sub(start, end, nil)
 			if err != nil {
 				return fmt.Errorf("failed to get sub tensor: %w", err).Error()
 			}
 
-			if err := sub.Reshape(g.shape[:len(g.shape)-1]...); err != nil {
+			if err := sub.Reshape(tensor.shape[:len(tensor.shape)-1]...); err != nil {
 				return fmt.Errorf("failed to reshape: %w", err).Error()
 			}
 

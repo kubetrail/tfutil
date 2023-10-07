@@ -8,8 +8,8 @@ import (
 )
 
 func TestMatrixMultiplyFloat64(t *testing.T) {
-	rand.Seed(0)
-	f := func(int) float64 { return float64(rand.Intn(100)) / 100 }
+	rnd := rand.New(rand.NewSource(0))
+	f := func(int) float64 { return float64(rnd.Intn(100)) / 100 }
 
 	x, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
@@ -35,8 +35,8 @@ func TestMatrixMultiplyFloat64(t *testing.T) {
 }
 
 func TestMatrixMultiplyInt32(t *testing.T) {
-	rand.Seed(0)
-	f := func(int) int32 { return rand.Int31n(100) }
+	rnd := rand.New(rand.NewSource(0))
+	f := func(int) int32 { return rnd.Int31n(100) }
 	x, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
 		t.Fatal(err)
@@ -61,9 +61,9 @@ func TestMatrixMultiplyInt32(t *testing.T) {
 }
 
 func TestMatrixMultiplyBool(t *testing.T) {
-	rand.Seed(0)
+	rnd := rand.New(rand.NewSource(0))
 	f := func(int) bool {
-		if rand.Float64() > 0.5 {
+		if rnd.Float64() > 0.5 {
 			return true
 		}
 		return false
@@ -85,9 +85,9 @@ func TestMatrixMultiplyBool(t *testing.T) {
 }
 
 func TestMatrixMultiplyString(t *testing.T) {
-	rand.Seed(0)
+	rnd := rand.New(rand.NewSource(0))
 	f := func(int) string {
-		return string([]byte{byte(rand.Intn(26) + 'a')})
+		return string([]byte{byte(rnd.Intn(26) + 'a')})
 	}
 
 	x, err := NewTensorFromFunc(f, 3, 4)
@@ -106,15 +106,16 @@ func TestMatrixMultiplyString(t *testing.T) {
 }
 
 func TestCast(t *testing.T) {
-	rand.Seed(0)
-	f := func(int) int32 { return rand.Int31n(100) }
+	rnd := rand.New(rand.NewSource(0))
+	f := func(int) int32 { return rnd.Int31n(100) }
 	x, err := NewTensorFromFunc(f, 3, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	y := &Tensor[float64]{}
-	if err := Cast(x, y); err != nil {
+	// cast x to data type float64
+	y, err := Cast[float64](x)
+	if err != nil {
 		t.Fatal(err)
 	}
 
