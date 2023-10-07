@@ -16,6 +16,8 @@ func TestApplyOperators(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	x.String()
+
 	y, err := MatrixInverse(x)
 	if err != nil {
 		t.Fatal(err)

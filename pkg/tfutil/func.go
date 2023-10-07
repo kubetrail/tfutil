@@ -11,17 +11,10 @@ import (
 // MatrixInverse inverts the tensor assuming it is a square matrix,
 // otherwise it will throw error
 func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
-	inverseOperator := func(scope *op.Scope, outputs ...tf.Output) (tf.Output, error) {
-		if len(outputs) != 1 {
-			return tf.Output{}, fmt.Errorf("operator MatrixInverse needs len outputs = 1, got %d", len(outputs))
-		}
-		return op.MatrixInverse(scope, outputs[0]), nil
-	}
-
 	if clone, err := input.Clone(); err != nil {
 		return nil, fmt.Errorf("failed to clone input tensor: %w", err)
 	} else {
-		if err := clone.Apply(inverseOperator); err != nil {
+		if err := clone.Apply(MatrixInverseOp); err != nil {
 			return nil, fmt.Errorf("failed to invert input tensor: %w", err)
 		}
 		return clone, nil
@@ -30,15 +23,8 @@ func MatrixInverse[T PrimitiveTypes](input *Tensor[T]) (*Tensor[T], error) {
 
 // MatrixMultiply performs matrix multiplication
 func MatrixMultiply[T PrimitiveTypes](x, y *Tensor[T]) (*Tensor[T], error) {
-	mulOp := func(scope *op.Scope, outputs ...tf.Output) (tf.Output, error) {
-		if len(outputs) != 2 {
-			return tf.Output{}, fmt.Errorf("operator MatMul needs len output = 2, got %d", len(outputs))
-		}
-		return op.MatMul(scope, outputs[0], outputs[1]), nil
-	}
-
 	return Apply(
-		mulOp, x, y,
+		MatMulOp, x, y,
 	)
 }
 

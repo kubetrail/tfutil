@@ -7,7 +7,9 @@ import (
 	"github.com/wamuir/graft/tensorflow/op"
 )
 
-// Apply applies operator on the receiver tensor modifying it
+// Apply applies operator on the receiver tensor modifying it. For instance,
+// MatrixInverseOp is an operator that will invert the matrix assuming that
+// the receiver tensor is a matrix that can be inverted.
 func (tensor *Tensor[T]) Apply(operator Operator) error {
 	x, err := tensor.Marshal()
 	if err != nil {
