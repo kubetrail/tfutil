@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	tf "github.com/wamuir/graft/tensorflow"
+	"github.com/wamuir/graft/tensorflow/op"
 )
 
 // load models that provide helper functionality.
@@ -80,6 +81,9 @@ type tensorSerializer[T PrimitiveTypes] struct {
 	Imag32     []float32 `json:"imag32,omitempty"` // imaginary part
 }
 
+// Operator performs operation on the tensorflow graph
+type Operator func(*op.Scope, ...tf.Output) (tf.Output, error)
+
 // NewTensor creates a new tensor with specified dimensions. If no dimension
 // argument is specified, it is assumed that a vector is being created
 // and the shape assumes value equal to the length of the input slice
@@ -140,8 +144,8 @@ func NewTensorFromAny[T PrimitiveTypes](value any) (*Tensor[T], error) {
 // MarshalJSON serializes tensor with additional metadata such
 // as tensorflow data type and go data type. Use tensor
 // in json.Marshal for this method to be called indirectly.
-func (g *Tensor[T]) MarshalJSON() ([]byte, error) {
-	tfTensor, err := g.Marshal()
+func (tensor *Tensor[T]) MarshalJSON() ([]byte, error) {
+	tfTensor, err := tensor.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tf tensor: %w", err)
 	}
@@ -149,9 +153,9 @@ func (g *Tensor[T]) MarshalJSON() ([]byte, error) {
 	// json marshaling requires special handling of complex datatypes
 	switch any(*new(T)).(type) {
 	case complex128:
-		realValues := make([]float64, len(g.value))
-		imagValues := make([]float64, len(g.value))
-		for i, v := range g.value {
+		realValues := make([]float64, len(tensor.value))
+		imagValues := make([]float64, len(tensor.value))
+		for i, v := range tensor.value {
 			realValues[i] = real(any(v).(complex128))
 			imagValues[i] = imag(any(v).(complex128))
 		}
@@ -161,15 +165,15 @@ func (g *Tensor[T]) MarshalJSON() ([]byte, error) {
 				Type:       TypeTensor,
 				TfDataType: dataTypeMap[tfTensor.DataType()],
 				GoDataType: fmt.Sprintf("%T", *new(T)),
-				Shape:      g.shape,
+				Shape:      tensor.shape,
 				Real64:     realValues,
 				Imag64:     imagValues,
 			},
 		)
 	case complex64:
-		realValues := make([]float32, len(g.value))
-		imagValues := make([]float32, len(g.value))
-		for i, v := range g.value {
+		realValues := make([]float32, len(tensor.value))
+		imagValues := make([]float32, len(tensor.value))
+		for i, v := range tensor.value {
 			realValues[i] = real(any(v).(complex64))
 			imagValues[i] = imag(any(v).(complex64))
 		}
@@ -179,7 +183,7 @@ func (g *Tensor[T]) MarshalJSON() ([]byte, error) {
 				Type:       TypeTensor,
 				TfDataType: dataTypeMap[tfTensor.DataType()],
 				GoDataType: fmt.Sprintf("%T", *new(T)),
-				Shape:      g.shape,
+				Shape:      tensor.shape,
 				Real32:     realValues,
 				Imag32:     imagValues,
 			},
@@ -190,15 +194,15 @@ func (g *Tensor[T]) MarshalJSON() ([]byte, error) {
 				Type:       TypeTensor,
 				TfDataType: dataTypeMap[tfTensor.DataType()],
 				GoDataType: fmt.Sprintf("%T", *new(T)),
-				Shape:      g.shape,
-				Value:      g.value,
+				Shape:      tensor.shape,
+				Value:      tensor.value,
 			},
 		)
 	}
 }
 
 // UnmarshalJSON parses serialized tensor
-func (g *Tensor[T]) UnmarshalJSON(data []byte) error {
+func (tensor *Tensor[T]) UnmarshalJSON(data []byte) error {
 	s := &tensorSerializer[T]{}
 	if err := json.Unmarshal(data, s); err != nil {
 		return fmt.Errorf("failed to parse input: %w", err)
@@ -239,8 +243,8 @@ func (g *Tensor[T]) UnmarshalJSON(data []byte) error {
 			values[i] = complex(s.Real64[i], s.Imag64[i])
 		}
 
-		g.value = any(values).([]T)
-		g.shape = s.Shape
+		tensor.value = any(values).([]T)
+		tensor.shape = s.Shape
 	case complex64:
 		if len(s.Real32) != len(s.Imag32) {
 			return fmt.Errorf("complex data corruption, lenghts not equal")
@@ -259,53 +263,53 @@ func (g *Tensor[T]) UnmarshalJSON(data []byte) error {
 			values[i] = complex(s.Real32[i], s.Imag32[i])
 		}
 
-		g.value = any(values).([]T)
-		g.shape = s.Shape
+		tensor.value = any(values).([]T)
+		tensor.shape = s.Shape
 	default:
-		g.value = s.Value
-		g.shape = s.Shape
+		tensor.value = s.Value
+		tensor.shape = s.Shape
 	}
 
 	return nil
 }
 
 // Value returns underlying slice representation of the tensor
-func (g *Tensor[T]) Value() []T {
-	return g.value
+func (tensor *Tensor[T]) Value() []T {
+	return tensor.value
 }
 
 // Shape returns tensor shape
-func (g *Tensor[T]) Shape() []int {
-	return g.shape
+func (tensor *Tensor[T]) Shape() []int {
+	return tensor.shape
 }
 
 // NumElements is the total number of elements in the tensor
-func (g *Tensor[T]) NumElements() int {
-	return len(g.value)
+func (tensor *Tensor[T]) NumElements() int {
+	return len(tensor.value)
 }
 
-func (g *Tensor[T]) SetElement(value T, indices ...int) error {
-	index, err := g.indicesToIndex(indices)
+func (tensor *Tensor[T]) SetElement(value T, indices ...int) error {
+	index, err := tensor.indicesToIndex(indices)
 	if err != nil {
 		return err
 	}
 
-	g.value[index] = value
+	tensor.value[index] = value
 	return nil
 }
 
 // GetElement retrieves an element indexed by indices. This is
 // a slow method, for faster access it is recommended to obtain
 // a multidimensional slice and index off of that.
-func (g *Tensor[T]) GetElement(indices ...int) (T, error) {
+func (tensor *Tensor[T]) GetElement(indices ...int) (T, error) {
 	zt := *new(T)
 
-	index, err := g.indicesToIndex(indices)
+	index, err := tensor.indicesToIndex(indices)
 	if err != nil {
 		return zt, err
 	}
 
-	return g.value[index], nil
+	return tensor.value[index], nil
 }
 
 // GetMultiDimSlice fetches a multidimensional slice corresponding
@@ -315,8 +319,8 @@ func (g *Tensor[T]) GetElement(indices ...int) (T, error) {
 // shape [2, 3, 3, 4] will result in [][][][]bool as output.
 // Please note that it is users responsibility
 // to perform type assertion correctly on returned value
-func (g *Tensor[T]) GetMultiDimSlice() (any, error) {
-	tfTensor, err := g.Marshal()
+func (tensor *Tensor[T]) GetMultiDimSlice() (any, error) {
+	tfTensor, err := tensor.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal tfTensor: %w", err)
 	}
@@ -328,14 +332,14 @@ func (g *Tensor[T]) GetMultiDimSlice() (any, error) {
 // string tensor reshaping is currently not supported natively in go.
 // it is, however, possible to reshape it via a tf session running over
 // a graphdef that was generated using python code for reshape function
-func (g *Tensor[T]) Marshal() (*tf.Tensor, error) {
-	tfTensor, err := tf.NewTensor(g.value)
+func (tensor *Tensor[T]) Marshal() (*tf.Tensor, error) {
+	tfTensor, err := tf.NewTensor(tensor.value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a tensor: %w", err)
 	}
 
 	// if the receiver is a vector, there is no need to reshape
-	if len(g.shape) == 1 {
+	if len(tensor.shape) == 1 {
 		return tfTensor, nil
 	}
 
@@ -359,8 +363,8 @@ func (g *Tensor[T]) Marshal() (*tf.Tensor, error) {
 		// ensure shape dimension is passed as int32 because python model
 		// that was used to generate protobuf expects it to be int32 and
 		// errors out otherwise
-		shape := make([]int32, len(g.shape))
-		for i, v := range g.shape {
+		shape := make([]int32, len(tensor.shape))
+		for i, v := range tensor.shape {
 			shape[i] = int32(v)
 		}
 		dim, err := tf.NewTensor(shape)
@@ -415,9 +419,9 @@ func (g *Tensor[T]) Marshal() (*tf.Tensor, error) {
 
 		return out[0], nil
 	default:
-		shape := make([]int64, len(g.shape))
+		shape := make([]int64, len(tensor.shape))
 		for i := range shape {
-			shape[i] = int64(g.shape[i])
+			shape[i] = int64(tensor.shape[i])
 		}
 		if err := tfTensor.Reshape(shape); err != nil {
 			return nil, fmt.Errorf("")
@@ -431,7 +435,7 @@ func (g *Tensor[T]) Marshal() (*tf.Tensor, error) {
 // string tensor reshaping is currently not supported natively in go.
 // it is, however, possible to reshape it via a tf session running over
 // a graphdef that was generated using python code for reshape function
-func (g *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
+func (tensor *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
 	tfShape := tfTensor.Shape()
 	shape := make([]int, len(tfShape))
 	for i := range shape {
@@ -442,11 +446,11 @@ func (g *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
 	if len(shape) == 1 {
 		values, ok := tfTensor.Value().([]T)
 		if !ok {
-			return fmt.Errorf("type assertion failed, expected %T, received %T", g.value, tfTensor.Value())
+			return fmt.Errorf("type assertion failed, expected %T, received %T", tensor.value, tfTensor.Value())
 		}
 
-		g.value = values
-		g.shape = shape
+		tensor.value = values
+		tensor.shape = shape
 
 		return nil
 	}
@@ -532,8 +536,8 @@ func (g *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
 			return fmt.Errorf("output type from tf session run is not []string")
 		}
 
-		g.value = values
-		g.shape = shape
+		tensor.value = values
+		tensor.shape = shape
 
 		return nil
 	default:
@@ -543,11 +547,11 @@ func (g *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
 
 		value, ok := tfTensor.Value().([]T)
 		if !ok {
-			return fmt.Errorf("type assertion failed, expected %T, received %T", g.value, tfTensor.Value())
+			return fmt.Errorf("type assertion failed, expected %T, received %T", tensor.value, tfTensor.Value())
 		}
 
-		g.value = value
-		g.shape = shape
+		tensor.value = value
+		tensor.shape = shape
 
 		if err := tfTensor.Reshape(tfShape); err != nil {
 			return fmt.Errorf("failed to reshape input tensor back to original shape: %w", err)
@@ -560,14 +564,14 @@ func (g *Tensor[T]) Unmarshal(tfTensor *tf.Tensor) error {
 // indicesToIndex converts the dimensional indices (or subscripts)
 // to a positional index in the slice... all tensors are represented
 // as []T, so a positional index is simply an index on that slice
-func (g *Tensor[T]) indicesToIndex(indices []int) (int, error) {
-	if len(indices) != len(g.shape) {
+func (tensor *Tensor[T]) indicesToIndex(indices []int) (int, error) {
+	if len(indices) != len(tensor.shape) {
 		return 0, fmt.Errorf(
-			"invalid number of indices, expected %d, got %d", len(g.shape), len(indices),
+			"invalid number of indices, expected %d, got %d", len(tensor.shape), len(indices),
 		)
 	}
 
-	shape := g.shape
+	shape := tensor.shape
 
 	// weights apply to each index. lower the index,
 	// higher is its weight, in the sense of how many
@@ -594,15 +598,15 @@ func (g *Tensor[T]) indicesToIndex(indices []int) (int, error) {
 }
 
 // Clone creates a clone of receiver tensor
-func (g *Tensor[T]) Clone() (*Tensor[T], error) {
-	value := make([]T, len(g.value))
-	shape := make([]int, len(g.shape))
+func (tensor *Tensor[T]) Clone() (*Tensor[T], error) {
+	value := make([]T, len(tensor.value))
+	shape := make([]int, len(tensor.shape))
 
-	for i, v := range g.value {
+	for i, v := range tensor.value {
 		value[i] = v
 	}
 
-	for i, v := range g.shape {
+	for i, v := range tensor.shape {
 		shape[i] = v
 	}
 
@@ -616,8 +620,8 @@ func (g *Tensor[T]) Clone() (*Tensor[T], error) {
 
 // ApplyFunc applies input function f over each element of
 // tensor transforming it in place
-func (g *Tensor[T]) ApplyFunc(f func(T) T) {
-	for i := range g.value {
-		g.value[i] = f(g.value[i])
+func (tensor *Tensor[T]) ApplyFunc(f func(T) T) {
+	for i := range tensor.value {
+		tensor.value[i] = f(tensor.value[i])
 	}
 }

@@ -18,27 +18,27 @@ import (
 // strides are jumps and if nil is set to slice of ones.
 // The lengths of each of these inputs is, therefore, either nil or
 // equal to the length of the shape of the receiver tensor
-func (g *Tensor[T]) Sub(start, end, stride []int) (*Tensor[T], error) {
+func (tensor *Tensor[T]) Sub(start, end, stride []int) (*Tensor[T], error) {
 	if start == nil {
-		start = make([]int, len(g.shape))
+		start = make([]int, len(tensor.shape))
 	}
 	if end == nil {
-		end = g.shape
+		end = tensor.shape
 	}
 	if stride == nil {
-		stride = make([]int, len(g.shape))
+		stride = make([]int, len(tensor.shape))
 		for i := range stride {
 			stride[i] = 1
 		}
 	}
 
-	if len(start) != len(g.shape) ||
-		len(end) != len(g.shape) ||
-		len(stride) != len(g.shape) {
-		return nil, fmt.Errorf("inputs should either be nil or have lengths equal to %d", len(g.shape))
+	if len(start) != len(tensor.shape) ||
+		len(end) != len(tensor.shape) ||
+		len(stride) != len(tensor.shape) {
+		return nil, fmt.Errorf("inputs should either be nil or have lengths equal to %d", len(tensor.shape))
 	}
 
-	x, err := g.Marshal()
+	x, err := tensor.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tf tensor: %w", err)
 	}
@@ -63,7 +63,7 @@ func (g *Tensor[T]) Sub(start, end, stride []int) (*Tensor[T], error) {
 		root.SubScope("X"),
 		x.DataType(),
 		op.PlaceholderShape(
-			tf.MakeShape(castToInt64(g.shape)...),
+			tf.MakeShape(castToInt64(tensor.shape)...),
 		),
 	)
 	Start := op.Placeholder(

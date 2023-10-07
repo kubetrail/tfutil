@@ -3,11 +3,9 @@ package tfutil
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"testing"
-
-	tf "github.com/wamuir/graft/tensorflow"
-	"github.com/wamuir/graft/tensorflow/op"
 )
 
 func TestApplyOperators(t *testing.T) {
@@ -28,11 +26,11 @@ func TestApplyOperators(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// apply transformation operators in sequence with
-	// last one being applied first. In this case
-	// the output will be from abs(round(z))
-	z, err = ApplyOperators(z, op.Abs, op.Round)
-	if err != nil {
+	if err := z.Apply(RoundOp); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := z.Apply(AbsOp); err != nil {
 		t.Fatal(err)
 	}
 
@@ -41,7 +39,7 @@ func TestApplyOperators(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := "{\"type\":\"tensor\",\"tfDataType\":\"Double\",\"goDataType\":\"float64\",\"shape\":[5,5],\"value\":[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1]}"
+	expected := `{"type":"tensor","tfDataType":"Double","goDataType":"float64","shape":[5,5],"value":[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1]}`
 
 	if !bytes.Equal(jb, []byte(expected)) {
 		t.Fatal("output does not match expected value")
@@ -61,20 +59,16 @@ func TestApplyDualInputOperator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	z, err := ApplyOperatorXY(x, y,
-		func(scope *op.Scope, x, y tf.Output) tf.Output {
-			return op.MatMul(scope, x, y)
-		},
-	)
+	z, err := Apply(MatMulOp, x, y)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// apply transformation operators in sequence with
-	// last one being applied first. In this case
-	// the output will be from abs(round(z))
-	z, err = ApplyOperators(z, op.Abs, op.Round)
-	if err != nil {
+	if err := z.Apply(RoundOp); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := z.Apply(AbsOp); err != nil {
 		t.Fatal(err)
 	}
 
@@ -84,6 +78,7 @@ func TestApplyDualInputOperator(t *testing.T) {
 	}
 
 	expected := "{\"type\":\"tensor\",\"tfDataType\":\"Double\",\"goDataType\":\"float64\",\"shape\":[5,5],\"value\":[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1]}"
+	fmt.Println("***", expected)
 
 	if !bytes.Equal(jb, []byte(expected)) {
 		t.Fatal("output does not match expected value")

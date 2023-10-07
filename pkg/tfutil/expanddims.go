@@ -8,8 +8,8 @@ import (
 )
 
 // ExpandDims adds a new dimension
-func (g *Tensor[T]) ExpandDims(dim int) error {
-	x, err := g.Marshal()
+func (tensor *Tensor[T]) ExpandDims(dim int) error {
+	x, err := tensor.Marshal()
 	if err != nil {
 		return fmt.Errorf("failed to form tf tensor from receiver: %w", err)
 	}
@@ -58,7 +58,7 @@ func (g *Tensor[T]) ExpandDims(dim int) error {
 		return fmt.Errorf("expected session run output to have length 1, got %d", len(out))
 	}
 
-	if err := g.Unmarshal(out[0]); err != nil {
+	if err := tensor.Unmarshal(out[0]); err != nil {
 		return fmt.Errorf("failed to unmarshal output: %w", err)
 	}
 
