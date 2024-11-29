@@ -20,3 +20,7 @@ vendor/
 
 # libtensorflow
 libtensorflow-*
+
+#cmd executables
+cmd/mul/mul
+
