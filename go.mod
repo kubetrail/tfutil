@@ -4,9 +4,9 @@ go 1.23
 
 require (
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/wamuir/graft v0.9.0
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
-	google.golang.org/protobuf v1.35.2
+	github.com/wamuir/graft v0.10.0
+	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
+	google.golang.org/protobuf v1.36.2
 )
 
 require (

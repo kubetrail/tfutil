@@ -6,7 +6,7 @@ easier to work with tensors. In particular, this package
 intends to enable easier use of operators on tensors and
 serialization of data to-from tensor objects.
 
-> TF version v2.15.0
+> TF version v2.18.0
 
 # disclaimer
 > The use of this library does not guarantee security or usability for any
@@ -24,11 +24,17 @@ First make sure you have downloaded and installed `TensorFlow`
 sure you are able to build and run the "hello-world" as 
 described on that page.
 
-> Please use TF version v2.15.0. Older versions may not work
+> Please use TF version v2.18.0. Older versions may not work
 
 Download this repo to a folder and cd to it.
 ```bash
 go test ./...
+```
+> Please note that tests may fail on MacOS with the following error:
+```text
+dyld[1589]: Library not loaded: @rpath/libtensorflow.2.dylib
+  Reason: no LC_RPATH's found
+signal: abort trap
 ```
 
 ## usage
